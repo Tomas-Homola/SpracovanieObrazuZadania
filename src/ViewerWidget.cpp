@@ -1,4 +1,4 @@
-#include   "ViewerWidget.h"
+#include "ViewerWidget.h"
 
 ViewerWidget::ViewerWidget(QSize imgSize, QWidget* parent)
 	: QWidget(parent)

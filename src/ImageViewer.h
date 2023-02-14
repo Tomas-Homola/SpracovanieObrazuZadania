@@ -4,6 +4,7 @@
 #include <QtWidgets>
 #include "ui_ImageViewer.h"
 #include "ViewerWidget.h"
+#include "IPmodul.h"
 
 class ImageViewer : public QMainWindow
 {

@@ -13,6 +13,15 @@ ImageViewer::ImageViewer(QWidget* parent)
 	ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
 	vW->setObjectName("ViewerWidget");
+
+	uchar data[16] = { 1,  2,  3,  4, 
+					   5,  6,  7,  8, 
+					   9, 10, 11, 12,
+					   13,14, 15, 16};
+	uint N = 4;
+	IPmodul modul;
+
+	modul.mirrorPixels(data, 4, 4, N);
 }
 
 //ImageViewer Events
