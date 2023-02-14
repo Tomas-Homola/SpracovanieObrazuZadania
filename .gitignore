@@ -1,0 +1,17 @@
+# Ignore everything ...
+*
+build/
+
+# ... but these file types
+!.gitignore
+!src/
+!*.h
+!*.cpp
+!*.qrc
+!*.ui
+
+# ...even if they are in subdirectories
+#!*/
+
+# specific files
+!CMakeLists.txt
