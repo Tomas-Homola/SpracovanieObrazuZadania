@@ -16,8 +16,10 @@ class IPmodul
 private:
 	//################# Variables #################//
 	
-	double* m_imgLocalData = nullptr;
-	uint m_padding = 0;
+	double* m_pImgLocalData = nullptr;
+
+	uint m_imgWidth  = 0;
+	uint m_imgHeight = 0;
 
 	//################# Methods #################//
 
@@ -36,12 +38,8 @@ public:
 	//################# Get functions #################//
 	
 	// Returns pointer to memory where the image data are stored.
-	double* getImgData() { return m_imgLocalData; }
+	double* getImgData() { return m_pImgLocalData; }
 
-	// Returns current value of used padding, default 0.
-	uint getPadding() { return m_padding; }
-
-	double* getOriginalImgData();
 
 	//################# Image Processing functions #################//
 
@@ -53,11 +51,18 @@ public:
 	/// <param name="imgHeight">-> input image height</param>
 	/// <param name="padding">-> number of pixels to mirror</param>
 	/// <returns>True if successful, false otherwise.</returns>
-	bool mirrorPixels(uchar* originalImgData, const uint imgWidth, const uint imgHeight, const uint padding);
+	bool pixelsMirror(uchar* originalImgData, const uint imgWidth, const uint imgHeight, const uint padding);
 
+	/// <summary>
+	/// Crop extended image based on the given padding.
+	/// </summary>
+	/// <param name="padding">-> ...</param>
+	/// <returns>Pointer to memory where cropped image data are stored if successful, nullptr otherwise.</returns>
+	uchar* pixelsUnmirror(uint padding);
 
 	//################# Image Export functions #################//
 
 	static bool exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData);
+	static bool exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, uchar* imgData);
 
 };
