@@ -13,15 +13,6 @@ ImageViewer::ImageViewer(QWidget* parent)
 	ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
 	vW->setObjectName("ViewerWidget");
-
-	uchar data[16] = { 1,  2,  3,  4, 
-					   5,  6,  7,  8, 
-					   9, 10, 11, 12,
-					   13,14, 15, 16};
-	uint N = 4;
-	IPmodul modul;
-
-	modul.mirrorPixels(data, 4, 4, N);
 }
 
 //ImageViewer Events
@@ -133,4 +124,16 @@ void ImageViewer::on_actionExit_triggered()
 void ImageViewer::on_actionInvert_triggered()
 {
 	invertColors();
+}
+
+void ImageViewer::on_pushButton_mirrorTest_clicked()
+{
+	if (vW->getImage() == nullptr)
+		return;
+	
+	IPmodul ipmodul;
+
+	bool result = ipmodul.mirrorPixels(vW->getData(), vW->getImage()->width(), vW->getImage()->height(), 2);
+
+	printf("mirror pixels result: %d\n", result);
 }

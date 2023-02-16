@@ -33,4 +33,6 @@ private slots:
 	void on_actionSave_as_triggered();
 	void on_actionExit_triggered();
 	void on_actionInvert_triggered();
+
+	void on_pushButton_mirrorTest_clicked();
 };

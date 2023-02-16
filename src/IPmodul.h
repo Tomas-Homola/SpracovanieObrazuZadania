@@ -17,6 +17,7 @@ private:
 	//################# Variables #################//
 	
 	double* m_imgLocalData = nullptr;
+	uint m_padding = 0;
 
 	//################# Methods #################//
 
@@ -32,16 +33,27 @@ public:
 	/// </summary>
 	~IPmodul();
 
+	//################# Get functions #################//
+	
+	// Returns pointer to memory where the image data are stored.
+	double* getImgData() { return m_imgLocalData; }
+
+	// Returns current value of used padding, default 0.
+	uint getPadding() { return m_padding; }
+
+	double* getOriginalImgData();
+
 	//################# Image Processing functions #################//
 
 	/// <summary>
-	/// Extend image by copying N pixels over its edges
+	/// Extend image by copying N pixels over its edges.
 	/// </summary>
 	/// <param name="data">-> input image data</param>
 	/// <param name="imgWidth">-> input image width</param>
 	/// <param name="imgHeight">-> input image height</param>
-	/// <param name="N">-> number of pixels to mirror</param>
-	bool mirrorPixels(uchar* originalImgData, const uint imgWidth, const uint imgHeight, const uint N);
+	/// <param name="padding">-> number of pixels to mirror</param>
+	/// <returns>True if successful, false otherwise.</returns>
+	bool mirrorPixels(uchar* originalImgData, const uint imgWidth, const uint imgHeight, const uint padding);
 
 
 	//################# Image Export functions #################//
