@@ -132,8 +132,17 @@ void ImageViewer::on_pushButton_mirrorTest_clicked()
 		return;
 	
 	IPmodul ipmodul;
-
-	bool result = ipmodul.mirrorPixels(vW->getData(), vW->getImage()->width(), vW->getImage()->height(), 2);
+	uint N = 20;
+	bool result = ipmodul.pixelsMirror(vW->getData(), vW->getImage()->width(), vW->getImage()->height(), N);
 
 	printf("mirror pixels result: %d\n", result);
+
+	uchar* data = ipmodul.pixelsUnmirror(N);
+	if (data == nullptr)
+		printf("unmirror unsuccessful\n");
+	else
+		printf("unmirror successful\n");
+
+	//IPmodul::exportToPGM("../temp/test", vW->getImgWidth(), vW->getImgHeight(), 255, data);
+	IPmodul::exportToPGM("../temp/test2", ipmodul.getImgWidth(), ipmodul.getImgHeight(), 255, ipmodul.getImgData(), false);
 }
