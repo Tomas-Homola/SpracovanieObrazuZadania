@@ -80,7 +80,7 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const uint imgWidth, const ui
 
 			// right edge
 			indexOld = i * m_imgWidth + (m_imgHeight - padding - 1 - j);
-			indexNew = indexOld + temp;
+			indexNew = indexOld + temp; // TODO: opravit poxitanie indexu pixela
 			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
 
 			temp += 2;
@@ -137,9 +137,9 @@ uchar* IPmodul::pixelsUnmirror(uint padding)
 	return pImgData;
 }
 
-bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData)
+bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData)
 {
-	printf("Exporting image to pgm...\n");
+	printf("Exporting image to pgm...");
 	FILE* fp = nullptr;
 	fp = fopen((fileName + ".pgm").c_str(), "w+");
 	if (fp == nullptr)
@@ -148,19 +148,37 @@ bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, i
 	unsigned char scaledValue = 0;
 	int dataSize = imgWidth * imgHeight;
 	fprintf(fp, "P2\n%d %d\n%d\n", imgWidth, imgHeight, maxValue);
-	for (size_t i = 0; i < dataSize; i++)
+	
+	if (scaleData)
 	{
-		scaledValue = static_cast<unsigned char>(imgData[i] * maxValue + 0.5);
-		fprintf(fp, "%d ", scaledValue);
+		for (size_t i = 0; i < dataSize; i++)
+		{
+			scaledValue = static_cast<unsigned char>(imgData[i] * maxValue + 0.5);
+			fprintf(fp, "%d ", scaledValue);
 
-		if ((i + 1) % 70 == 0)
-			fprintf(fp, "\n");
+			if ((i + 1) % 70 == 0)
+				fprintf(fp, "\n");
 
-		if ((i + 1) % (dataSize / 10) == 0)
-			printf("%d%% done\n", 10 * ((int)i + 1) / (dataSize / 10));
+			if ((i + 1) % (dataSize / 10) == 0)
+				printf("\rExporting image to pgm... %d%% done", 10 * ((int)i + 1) / (dataSize / 10));
+		}
 	}
+	else
+	{
+		for (size_t i = 0; i < dataSize; i++)
+		{
+			scaledValue = static_cast<unsigned char>(imgData[i] + 0.5);
+			fprintf(fp, "%d ", scaledValue);
+
+			if ((i + 1) % 70 == 0)
+				fprintf(fp, "\n");
+
+			if ((i + 1) % (dataSize / 10) == 0)
+				printf("\rExporting image to pgm... %d%% done", 10 * ((int)i + 1) / (dataSize / 10));
+		}
+	}
+	printf("\n");
 	fclose(fp);
-	printf("Export done\n");
 
 	return true;
 }
@@ -185,7 +203,7 @@ bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, i
 		if ((i + 1) % (dataSize / 10) == 0)
 		{
 			printf("\rExporting image to pgm... %d%% done", 10 * ((int)i + 1) / (dataSize / 10));
-			_sleep(500);
+			//_sleep(500);
 		}
 	}
 	printf("\n");

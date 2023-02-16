@@ -39,7 +39,10 @@ public:
 	
 	// Returns pointer to memory where the image data are stored.
 	double* getImgData() { return m_pImgLocalData; }
+	
+	uint getImgWidth() { return m_imgWidth; }
 
+	uint getImgHeight() { return m_imgHeight; }
 
 	//################# Image Processing functions #################//
 
@@ -62,7 +65,7 @@ public:
 
 	//################# Image Export functions #################//
 
-	static bool exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData);
+	static bool exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData = true);
 	static bool exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, uchar* imgData);
 
 };
