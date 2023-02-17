@@ -132,17 +132,19 @@ void ImageViewer::on_pushButton_mirrorTest_clicked()
 		return;
 	
 	IPmodul ipmodul;
-	uint N = 20;
+	uint N = QInputDialog::getInt(this, tr("Mirror pixels"), tr("Number of pixels:"), 2, 1);
+	
+	//ipmodul.pixelsMirror(d, 4, 4, N);
 	bool result = ipmodul.pixelsMirror(vW->getData(), vW->getImage()->width(), vW->getImage()->height(), N);
 
 	printf("mirror pixels result: %d\n", result);
-
+	
 	uchar* data = ipmodul.pixelsUnmirror(N);
 	if (data == nullptr)
 		printf("unmirror unsuccessful\n");
 	else
 		printf("unmirror successful\n");
-
+	
 	//IPmodul::exportToPGM("../temp/test", vW->getImgWidth(), vW->getImgHeight(), 255, data);
 	IPmodul::exportToPGM("../temp/test2", ipmodul.getImgWidth(), ipmodul.getImgHeight(), 255, ipmodul.getImgData(), false);
 }

@@ -40,8 +40,10 @@ public:
 	// Returns pointer to memory where the image data are stored.
 	double* getImgData() { return m_pImgLocalData; }
 	
+	// Get width of the locally stored image.
 	uint getImgWidth() { return m_imgWidth; }
 
+	// Get height of the locally stored image.
 	uint getImgHeight() { return m_imgHeight; }
 
 	//################# Image Processing functions #################//

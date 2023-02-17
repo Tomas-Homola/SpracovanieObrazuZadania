@@ -80,7 +80,7 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const uint imgWidth, const ui
 
 			// right edge
 			indexOld = i * m_imgWidth + (m_imgHeight - padding - 1 - j);
-			indexNew = indexOld + temp; // TODO: opravit poxitanie indexu pixela
+			indexNew = indexOld + temp; // mozno funguje, mozno nie, neviem :(
 			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
 
 			temp += 2;
