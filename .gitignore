@@ -6,10 +6,12 @@ temp/
 # ... but these file types
 !.gitignore
 !src/
+!data/
 !*.h
 !*.cpp
 !*.qrc
 !*.ui
+!*.pgm
 
 # ...even if they are in subdirectories
 #!*/
