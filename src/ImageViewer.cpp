@@ -126,6 +126,21 @@ void ImageViewer::on_actionInvert_triggered()
 	invertColors();
 }
 
+void ImageViewer::on_actionPrint_histogram_triggered()
+{
+	IPmodul ipmodul;
+	uint* hist = nullptr;
+	
+	ipmodul.computeHistogram(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImage()->width(), vW->getImage()->height());
+	hist = ipmodul.getHistogram();
+	
+	for (int i = 0; i < 256; i++)
+	{
+		printf("hist[%d]: %d\n", i, hist[i]);
+	}
+	printf("\n");
+}
+
 void ImageViewer::on_pushButton_mirrorTest_clicked()
 {
 	if (vW->getImage() == nullptr)
@@ -135,7 +150,7 @@ void ImageViewer::on_pushButton_mirrorTest_clicked()
 	uint N = QInputDialog::getInt(this, tr("Mirror pixels"), tr("Number of pixels:"), 2, 1);
 	
 	//ipmodul.pixelsMirror(d, 4, 4, N);
-	bool result = ipmodul.pixelsMirror(vW->getData(), vW->getImage()->width(), vW->getImage()->height(), N);
+	bool result = ipmodul.pixelsMirror(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImage()->width(), vW->getImage()->height(), N);
 
 	printf("mirror pixels result: %d\n", result);
 	

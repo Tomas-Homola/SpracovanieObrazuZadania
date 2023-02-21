@@ -87,8 +87,15 @@
     </property>
     <addaction name="actionInvert"/>
    </widget>
+   <widget class="QMenu" name="menuTesting">
+    <property name="title">
+     <string>Testing</string>
+    </property>
+    <addaction name="actionPrint_histogram"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
+   <addaction name="menuTesting"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -136,6 +143,11 @@
   <action name="actionInvert">
    <property name="text">
     <string>Invert</string>
+   </property>
+  </action>
+  <action name="actionPrint_histogram">
+   <property name="text">
+    <string>Print histogram</string>
    </property>
   </action>
  </widget>
