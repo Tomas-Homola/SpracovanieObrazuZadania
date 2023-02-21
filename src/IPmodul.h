@@ -21,6 +21,8 @@ private:
 	uint m_imgWidth  = 0;
 	uint m_imgHeight = 0;
 
+	uint m_histogram[256] = { 0 };
+
 	//################# Methods #################//
 
 	
@@ -46,24 +48,37 @@ public:
 	// Get height of the locally stored image.
 	uint getImgHeight() { return m_imgHeight; }
 
+	// Returns pointer to image histogram
+	uint* getHistogram() { return m_histogram; }
+
 	//################# Image Processing functions #################//
 
 	/// <summary>
 	/// Extend image by copying N pixels over its edges.
 	/// </summary>
-	/// <param name="data">-> input image data</param>
+	/// <param name="originalImgData">-> input image data</param>
+	/// <param name="bytesPerLine">-> ...</param>
 	/// <param name="imgWidth">-> input image width</param>
 	/// <param name="imgHeight">-> input image height</param>
 	/// <param name="padding">-> number of pixels to mirror</param>
 	/// <returns>True if successful, false otherwise.</returns>
-	bool pixelsMirror(uchar* originalImgData, const uint imgWidth, const uint imgHeight, const uint padding);
+	bool pixelsMirror(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const int padding);
 
 	/// <summary>
 	/// Crop extended image based on the given padding.
 	/// </summary>
 	/// <param name="padding">-> ...</param>
 	/// <returns>Pointer to memory where cropped image data are stored if successful, nullptr otherwise.</returns>
-	uchar* pixelsUnmirror(uint padding);
+	uchar* pixelsUnmirror(int padding);
+
+	/// <summary>
+	/// Computes histogram for given image.
+	/// </summary>
+	/// <param name="originalImgData"></param>
+	/// <param name="bytesPerLine"></param>
+	/// <param name="imgWidth"></param>
+	/// <param name="imgHeight"></param>
+	void computeHistogram(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
 
 	//################# Image Export functions #################//
 

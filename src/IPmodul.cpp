@@ -12,7 +12,7 @@ IPmodul::~IPmodul()
 	free(m_pImgLocalData);
 }
 
-bool IPmodul::pixelsMirror(uchar* originalImgData, const uint imgWidth, const uint imgHeight, const uint padding)
+bool IPmodul::pixelsMirror(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const int padding)
 {
 	int indexNew = 0, indexOld = 0;
 	int temp = 0;
@@ -25,9 +25,7 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const uint imgWidth, const ui
 	}
 	
 	// compute new size
-	//int newWidth = imgWidth + 2 * padding;
 	m_imgWidth = imgWidth + 2 * padding;
-	//int newHeight = imgHeight + 2 * padding;
 	m_imgHeight = imgHeight + 2 * padding;
 	int size = m_imgWidth * m_imgHeight;
 	
@@ -42,7 +40,7 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const uint imgWidth, const ui
 		for (int j = 0; j < imgWidth; j++)
 		{
 			indexNew = (i + padding) * m_imgWidth + (j + padding);
-			indexOld = i * imgWidth + j;
+			indexOld = i * bytesPerLine + j;
 
 			m_pImgLocalData[indexNew] = static_cast<double>(originalImgData[indexOld]);
 		}
@@ -79,8 +77,8 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const uint imgWidth, const ui
 			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
 
 			// right edge
-			indexOld = i * m_imgWidth + (m_imgHeight - padding - 1 - j);
-			indexNew = indexOld + temp; // mozno funguje, mozno nie, neviem :(
+			indexOld = i * m_imgWidth + (m_imgWidth - padding - 1 - j);
+			indexNew = i * m_imgWidth + (m_imgWidth - padding - 1 - j + temp);
 			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
 
 			temp += 2;
@@ -102,7 +100,7 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const uint imgWidth, const ui
 	return true;
 }
 
-uchar* IPmodul::pixelsUnmirror(uint padding)
+uchar* IPmodul::pixelsUnmirror(int padding)
 {
 	if (m_pImgLocalData == nullptr) // check, if there is some image to be cropped
 		return nullptr;
@@ -135,6 +133,29 @@ uchar* IPmodul::pixelsUnmirror(uint padding)
 	}
 
 	return pImgData;
+}
+
+void IPmodul::computeHistogram(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight)
+{
+	// remove old histogram values
+	for (int i = 0; i < 256; i++)
+	{
+		m_histogram[i] = 0;
+	}
+
+	int index = 0;
+	uchar value = 0;
+
+	for (int i = 0; i < imgHeight; i++)
+	{
+		for (int j = 0; j < imgWidth; j++)
+		{
+			index = i * bytesPerLine + j;
+			value = originalImgData[index];
+
+			m_histogram[value]++;
+		}
+	}
 }
 
 bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData)
