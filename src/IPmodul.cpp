@@ -145,17 +145,52 @@ void IPmodul::computeHistogram(uchar* originalImgData, const int bytesPerLine, c
 
 	int index = 0;
 	uchar value = 0;
+	m_minValue = INT_MAX;
+	m_maxValue = INT_MIN;
 
 	for (int i = 0; i < imgHeight; i++)
 	{
 		for (int j = 0; j < imgWidth; j++)
 		{
+			// read pixel value
 			index = i * bytesPerLine + j;
 			value = originalImgData[index];
 
+			// increase corresponding place in histogram
 			m_histogram[value]++;
+
+			// find min/max values of the given image
+			if (value < m_minValue) m_minValue = value;
+			if (value > m_maxValue) m_maxValue = value;
+
 		}
 	}
+}
+
+bool IPmodul::FSHS(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight)
+{
+	if (imgData == nullptr)
+		return false;
+
+	// compute histogram for the given image, function also finds min and max values
+	computeHistogram(imgData, bytesPerLine, imgWidth, imgHeight);
+
+	int index = 0;
+	double val = 0;
+	uchar scaledValue = 0;
+	for (int i = 0; i < imgHeight; i++)
+	{
+		for (int j = 0; j < imgWidth; j++)
+		{
+			index = i * bytesPerLine + j;
+			// scale values from original range [m_minValue, m_maxValue] to [0, 255]
+			val = static_cast<double>(imgData[index]);
+			scaledValue = static_cast<uchar>(((val - m_minValue) / (m_maxValue - m_minValue)) * 255 + 0.5);
+			imgData[index] = scaledValue;
+		}
+	}
+
+	return true;
 }
 
 bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData)

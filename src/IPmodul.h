@@ -6,10 +6,6 @@
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
-// asi trieda "IPmodul", ktora bude mat funkcie na Image Processing
-// na vstup do konstruktora dostane data, s ktorymi sa bude pracovat
-// double* m_localData
-// funkcia na zrkadlenie a odzrkadlenie -> mirror(int N), rozsiri obrazok o N pixelov kazdym smerom tak, ze prekopiruje hodnoty pixelov pri hranici obrazka
 
 class IPmodul
 {
@@ -22,6 +18,8 @@ private:
 	uint m_imgHeight = 0;
 
 	uint m_histogram[256] = { 0 };
+	int m_minValue = -1;
+	int m_maxValue = -1;
 
 	//################# Methods #################//
 
@@ -79,6 +77,16 @@ public:
 	/// <param name="imgWidth"></param>
 	/// <param name="imgHeight"></param>
 	void computeHistogram(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
+
+	/// <summary>
+	/// Performs Full Scale Histogram Stretch on the given image
+	/// </summary>
+	/// <param name="imgData">-> ...</param>
+	/// <param name="bytesPerLine">-> ...</param>
+	/// <param name="imgWidth">-> ...</param>
+	/// <param name="imgHeight">-> ...</param>
+	/// /// <returns>True if successful, false otherwise.</returns>
+	bool FSHS(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
 
 	//################# Image Export functions #################//
 
