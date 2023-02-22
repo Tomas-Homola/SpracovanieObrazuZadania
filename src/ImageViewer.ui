@@ -92,6 +92,8 @@
      <string>Testing</string>
     </property>
     <addaction name="actionPrint_histogram"/>
+    <addaction name="actionFSHS"/>
+    <addaction name="actionEKV_HIST"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
@@ -148,6 +150,16 @@
   <action name="actionPrint_histogram">
    <property name="text">
     <string>Print histogram</string>
+   </property>
+  </action>
+  <action name="actionFSHS">
+   <property name="text">
+    <string>FSHS</string>
+   </property>
+  </action>
+  <action name="actionEKV_HIST">
+   <property name="text">
+    <string>EKV_HIST</string>
    </property>
   </action>
  </widget>

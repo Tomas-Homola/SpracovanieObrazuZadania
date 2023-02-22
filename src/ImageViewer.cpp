@@ -141,6 +141,23 @@ void ImageViewer::on_actionPrint_histogram_triggered()
 	printf("\n");
 }
 
+void ImageViewer::on_actionFSHS_triggered()
+{
+	if (vW->isEmpty()) {
+		return;
+	}
+	
+	IPmodul ipmodul;
+
+	ipmodul.FSHS(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImgWidth(), vW->getImgHeight());
+
+	vW->update();
+}
+
+void ImageViewer::on_actionEKV_HIST_triggered()
+{
+}
+
 void ImageViewer::on_pushButton_mirrorTest_clicked()
 {
 	if (vW->getImage() == nullptr)
