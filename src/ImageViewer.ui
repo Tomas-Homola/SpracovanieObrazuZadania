@@ -92,6 +92,7 @@
      <string>Testing</string>
     </property>
     <addaction name="actionPrint_histogram"/>
+    <addaction name="separator"/>
     <addaction name="actionFSHS"/>
     <addaction name="actionEKV_HIST"/>
    </widget>

@@ -21,6 +21,8 @@ private:
 	int m_minValue = -1;
 	int m_maxValue = -1;
 
+	double m_histogramNormalized[256] = { 0.0 };
+	double m_histogramCumulative[256] = { 0.0 };
 	//################# Methods #################//
 
 	
@@ -70,23 +72,33 @@ public:
 	uchar* pixelsUnmirror(int padding);
 
 	/// <summary>
-	/// Computes histogram for given image.
+	/// Computes histogram data for the given image: histogram, max and min values, normalized histogram and cumulative normalized histogram.
 	/// </summary>
 	/// <param name="originalImgData"></param>
 	/// <param name="bytesPerLine"></param>
 	/// <param name="imgWidth"></param>
 	/// <param name="imgHeight"></param>
-	void computeHistogram(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
+	void computeHistogramData(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
 
 	/// <summary>
-	/// Performs Full Scale Histogram Stretch on the given image
+	/// Performs Full Scale Histogram Stretch on the given image.
 	/// </summary>
 	/// <param name="imgData">-> ...</param>
 	/// <param name="bytesPerLine">-> ...</param>
 	/// <param name="imgWidth">-> ...</param>
 	/// <param name="imgHeight">-> ...</param>
-	/// /// <returns>True if successful, false otherwise.</returns>
+	/// <returns>True if successful, false otherwise.</returns>
 	bool FSHS(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
+
+	/// <summary>
+	/// Performs Histogram Equalization on the given image.
+	/// </summary>
+	/// <param name="imgData"></param>
+	/// <param name="bytesPerLine"></param>
+	/// <param name="imgWidth"></param>
+	/// <param name="imgHeight"></param>
+	/// <returns>True if successful, false otherwise.</returns>
+	bool EKV_HIST(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
 
 	//################# Image Export functions #################//
 

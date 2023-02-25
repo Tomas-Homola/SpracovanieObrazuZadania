@@ -135,7 +135,7 @@ uchar* IPmodul::pixelsUnmirror(int padding)
 	return pImgData;
 }
 
-void IPmodul::computeHistogram(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight)
+void IPmodul::computeHistogramData(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight)
 {
 	// remove old histogram values
 	for (int i = 0; i < 256; i++)
@@ -148,6 +148,7 @@ void IPmodul::computeHistogram(uchar* originalImgData, const int bytesPerLine, c
 	m_minValue = INT_MAX;
 	m_maxValue = INT_MIN;
 
+	// compute image histogram
 	for (int i = 0; i < imgHeight; i++)
 	{
 		for (int j = 0; j < imgWidth; j++)
@@ -165,6 +166,21 @@ void IPmodul::computeHistogram(uchar* originalImgData, const int bytesPerLine, c
 
 		}
 	}
+
+	int pixels = imgWidth * imgHeight;
+	// compute normalized histogram
+	for (int i = 0; i < 256; i++)
+	{
+		// compute relative frequency
+		m_histogramNormalized[i] = static_cast<double>(m_histogram[i]) / pixels;
+	}
+
+	// compute cumulative normalized histogram
+	m_histogramCumulative[0] = m_histogramNormalized[0];
+	for (int i = 1; i < 256; i++)
+	{
+		m_histogramCumulative[i] = m_histogramCumulative[i - 1] + m_histogramNormalized[i];
+	}
 }
 
 bool IPmodul::FSHS(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight)
@@ -173,10 +189,10 @@ bool IPmodul::FSHS(uchar* imgData, const int bytesPerLine, const int imgWidth, c
 		return false;
 
 	// compute histogram for the given image, function also finds min and max values
-	computeHistogram(imgData, bytesPerLine, imgWidth, imgHeight);
+	computeHistogramData(imgData, bytesPerLine, imgWidth, imgHeight);
 
 	int index = 0;
-	double val = 0;
+	double temp = 0;
 	uchar scaledValue = 0;
 	for (int i = 0; i < imgHeight; i++)
 	{
@@ -184,8 +200,35 @@ bool IPmodul::FSHS(uchar* imgData, const int bytesPerLine, const int imgWidth, c
 		{
 			index = i * bytesPerLine + j;
 			// scale values from original range [m_minValue, m_maxValue] to [0, 255]
-			val = static_cast<double>(imgData[index]);
-			scaledValue = static_cast<uchar>(((val - m_minValue) / (m_maxValue - m_minValue)) * 255 + 0.5);
+			temp = static_cast<double>(imgData[index]);
+			scaledValue = static_cast<uchar>(((temp - m_minValue) / (m_maxValue - m_minValue)) * 255 + 0.5);
+			imgData[index] = scaledValue;
+		}
+	}
+
+	return true;
+}
+
+bool IPmodul::EKV_HIST(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight)
+{
+	if (imgData == nullptr)
+		return false;
+
+	// compute histogram data for the given image
+	computeHistogramData(imgData, bytesPerLine, imgWidth, imgHeight);
+
+	int index = 0;
+	int temp = 0;
+	uchar scaledValue = 0;
+	for (int i = 0; i < imgHeight; i++)
+	{
+		for (int j = 0; j < imgWidth; j++)
+		{
+			index = i * bytesPerLine + j;
+			
+			temp = static_cast<int>(imgData[index]); // get pixel value
+			scaledValue = static_cast<uchar>(255.0 * m_histogramCumulative[temp] + 0.5);
+			
 			imgData[index] = scaledValue;
 		}
 	}

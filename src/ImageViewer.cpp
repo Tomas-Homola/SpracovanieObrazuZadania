@@ -131,7 +131,7 @@ void ImageViewer::on_actionPrint_histogram_triggered()
 	IPmodul ipmodul;
 	uint* hist = nullptr;
 	
-	ipmodul.computeHistogram(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImage()->width(), vW->getImage()->height());
+	ipmodul.computeHistogramData(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImage()->width(), vW->getImage()->height());
 	hist = ipmodul.getHistogram();
 	
 	for (int i = 0; i < 256; i++)
@@ -156,6 +156,15 @@ void ImageViewer::on_actionFSHS_triggered()
 
 void ImageViewer::on_actionEKV_HIST_triggered()
 {
+	if (vW->isEmpty()) {
+		return;
+	}
+
+	IPmodul ipmodul;
+
+	ipmodul.EKV_HIST(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImgWidth(), vW->getImgHeight());
+
+	vW->update();
 }
 
 void ImageViewer::on_pushButton_mirrorTest_clicked()
