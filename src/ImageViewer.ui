@@ -95,6 +95,8 @@
     <addaction name="separator"/>
     <addaction name="actionFSHS"/>
     <addaction name="actionEKV_HIST"/>
+    <addaction name="separator"/>
+    <addaction name="actionConvolution"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
@@ -161,6 +163,11 @@
   <action name="actionEKV_HIST">
    <property name="text">
     <string>EKV_HIST</string>
+   </property>
+  </action>
+  <action name="actionConvolution">
+   <property name="text">
+    <string>Convolution</string>
    </property>
   </action>
  </widget>

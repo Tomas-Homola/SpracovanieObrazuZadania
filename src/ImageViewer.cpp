@@ -161,10 +161,34 @@ void ImageViewer::on_actionEKV_HIST_triggered()
 	}
 
 	IPmodul ipmodul;
-
+	
 	ipmodul.EKV_HIST(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImgWidth(), vW->getImgHeight());
-
+	
 	vW->update();
+}
+
+void ImageViewer::on_actionConvolution_triggered()
+{
+	if (vW->isEmpty()) {
+		return;
+	}
+
+	IPmodul ipmodul;
+	ConvolutionKernel kernel(3);
+
+	double d[9] = {  0.0, -1.0,  0.0,
+					-1.0,  4.0, -1.0,
+					 0.0, -1.0,  0.0 };
+	kernel.setKernel(3, d);
+	kernel.printKernel();
+
+	uchar* newImg = ipmodul.convolution(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), &kernel);
+
+	QString fileName = QInputDialog::getText(this, tr("Image export"), tr("File name:"));
+	fileName.prepend("../temp/");
+	IPmodul::exportToPGM(fileName.toStdString(), vW->getImgWidth(), vW->getImgHeight(), 255, newImg);
+
+	QMessageBox::information(this, "File export", "Image export done.", QMessageBox::Ok);
 }
 
 void ImageViewer::on_pushButton_mirrorTest_clicked()
