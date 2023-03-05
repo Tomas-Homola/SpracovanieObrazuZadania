@@ -1,5 +1,40 @@
 #include "IPmodul.h"
 
+bool ConvolutionKernel::setKernel(int kernelSize, double* kernel)
+{
+	m_kernelSize = kernelSize;
+
+	if (m_pKernel != nullptr) // delete old kernel data
+	{
+		free(m_pKernel); // delete old kernel
+	}
+
+	// allocate space for new kernel
+	m_pKernel = static_cast<double*>(calloc(kernelSize * kernelSize, sizeof(double)));
+	if (m_pKernel == nullptr) // check if allocation was successful
+		return false;
+
+	// copy new kernel data
+	for (int i = 0; i < kernelSize * kernelSize; i++)
+	{
+		m_pKernel[i] = kernel[i];
+	}
+
+	return true;
+}
+
+void ConvolutionKernel::printKernel()
+{
+	for (int i = 0; i < m_kernelSize; i++)
+	{
+		for (int j = 0; j < m_kernelSize; j++)
+		{
+			printf("%.4f\t", m_pKernel[i * m_kernelSize + j]);
+		}
+		printf("\n");
+	}
+}
+
 
 IPmodul::IPmodul()
 {
@@ -234,6 +269,82 @@ bool IPmodul::EKV_HIST(uchar* imgData, const int bytesPerLine, const int imgWidt
 	}
 
 	return true;
+}
+
+uchar* IPmodul::convolution(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, ConvolutionKernel* convolutionKernel)
+{
+	uchar* newImgData = nullptr;
+	
+	double* kernel = nullptr;
+	int kernelSize = -1;
+
+	double newValue = 0.0;
+	double imgValue = 0.0;
+	int imgIndex = -1;
+	int imgNewIndex = -1;
+	int kernelIndex = -1;
+	int iNew = 0, jNew = 0;
+	uchar scaledValue = 0;
+
+	// find the necessary padding for pixels mirroring
+	int padding = convolutionKernel->kernelSize() / 2;
+
+	// extend image data based on kernel size
+	if (!pixelsMirror(imgData, bytesPerLine, imgWidth, imgHeight, padding))
+		return nullptr;
+
+	// allocate space for new image data
+	newImgData = static_cast<uchar*>(calloc(imgWidth * imgHeight, sizeof(uchar*)));
+	if (newImgData == nullptr) // check, if allocation successful
+		return nullptr;
+
+	// save kernel info
+	kernel     = convolutionKernel->kernel();
+	kernelSize = convolutionKernel->kernelSize();
+
+	// perform convolution with given kernel
+	// original image saved in m_pImgLocalData at [padding, imgHeight - padding]x[padding, imgWidth - padding]
+	// iterate through all pixels of the original data
+	for (int i = padding; i < m_imgHeight - padding; i++)
+	{
+		jNew = 0;
+		for (int j = padding; j < m_imgWidth - padding; j++)
+		{
+			newValue = 0.0;
+
+			// at (i,j) iterate through all kernel elements
+			for (int k = -padding; k <= padding; k++)
+			{
+				for (int l = -padding; l <= padding; l++)
+				{
+					// compute corresponding indices for image and kernel data
+					imgIndex    = (i + k) * m_imgWidth + (j + l);
+					kernelIndex = (k + padding) * kernelSize + (l + padding);
+
+					// compute new value by multipling pixel data with corresponding kernel weight
+					imgValue  = m_pImgLocalData[imgIndex];
+					newValue += imgValue * kernel[kernelIndex];
+				}
+			} // end of kernel iterations
+
+			// compute index in new image
+			imgNewIndex = iNew * imgWidth + jNew;
+
+			// check, wheather newValue is not out of bounds [0, 255]
+			if (newValue > 255.0) newValue = 255.0;
+			if (newValue < 0.0)   newValue = 0.0;
+
+			scaledValue = static_cast<uchar>(newValue + 0.5);
+			newImgData[imgNewIndex] = scaledValue;
+
+			jNew++;
+		}
+		
+		iNew++;
+	}
+
+	// return new image data
+	return newImgData;
 }
 
 bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData)

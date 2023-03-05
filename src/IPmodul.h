@@ -7,6 +7,43 @@
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
+class ConvolutionKernel
+{
+private:
+	int m_kernelSize = -1;
+	double* m_pKernel = nullptr;
+
+public:
+	
+	ConvolutionKernel() {}
+
+	/// <summary>
+	/// Creates a square convolution kernel that computes new values as the arithmetic mean from surrounding pixels.
+	/// </summary>
+	/// <param name="kernelSize">->...</param>
+	ConvolutionKernel(int kernelSize) : m_kernelSize(kernelSize)
+	{
+		m_pKernel = static_cast<double*>(calloc(kernelSize * kernelSize, sizeof(double)));
+		if (m_pKernel == nullptr)
+			return;
+
+		for (int i = 0; i < kernelSize*kernelSize; i++)
+		{
+			m_pKernel[i] = 1.0 / (kernelSize * kernelSize);
+		}
+	}
+
+	
+	~ConvolutionKernel() { free(m_pKernel); }
+
+	int kernelSize() { return m_kernelSize; }
+	double* kernel() { return m_pKernel; }
+
+	bool setKernel(int kernelSize, double* kernel);
+
+	void printKernel();
+};
+
 class IPmodul
 {
 private:
@@ -99,6 +136,9 @@ public:
 	/// <param name="imgHeight"></param>
 	/// <returns>True if successful, false otherwise.</returns>
 	bool EKV_HIST(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
+
+
+	uchar* convolution(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, ConvolutionKernel* convolutionKernel);
 
 	//################# Image Export functions #################//
 
