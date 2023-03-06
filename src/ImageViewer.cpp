@@ -176,19 +176,33 @@ void ImageViewer::on_actionConvolution_triggered()
 	IPmodul ipmodul;
 	ConvolutionKernel kernel(3);
 
-	double d[9] = {  0.0, -1.0,  0.0,
-					-1.0,  4.0, -1.0,
-					 0.0, -1.0,  0.0 };
+	double d[9] = { -2.0, -1.0,  0.0,
+					-1.0,  1.0,  1.0,
+					 0.0,  1.0,  2.0 };
 	kernel.setKernel(3, d);
-	kernel.printKernel();
+	//kernel.printKernel();
 
+	// compute convolution
 	uchar* newImg = ipmodul.convolution(vW->getData(), vW->getImage()->bytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), &kernel);
 
-	QString fileName = QInputDialog::getText(this, tr("Image export"), tr("File name:"));
-	fileName.prepend("../temp/");
-	IPmodul::exportToPGM(fileName.toStdString(), vW->getImgWidth(), vW->getImgHeight(), 255, newImg);
+	// copy new image values
+	for (int i = 0; i < vW->getImgHeight(); i++)
+	{
+		for (int j = 0; j < vW->getImgWidth(); j++)
+		{
+			vW->getData()[i * vW->getImage()->bytesPerLine() + j] = newImg[i * vW->getImgWidth() + j];
+		}
+	}
 
-	QMessageBox::information(this, "File export", "Image export done.", QMessageBox::Ok);
+	// free memory
+	delete[] newImg;
+
+	vW->update();
+	//QString fileName = QInputDialog::getText(this, tr("Image export"), tr("File name:"));
+	//fileName.prepend("../temp/");
+	//IPmodul::exportToPGM(fileName.toStdString(), vW->getImgWidth(), vW->getImgHeight(), 255, newImg);
+
+	//QMessageBox::information(this, "File export", "Image export done.", QMessageBox::Ok);
 }
 
 void ImageViewer::on_pushButton_mirrorTest_clicked()

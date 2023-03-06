@@ -137,7 +137,15 @@ public:
 	/// <returns>True if successful, false otherwise.</returns>
 	bool EKV_HIST(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
 
-
+	/// <summary>
+	/// Performs convolution with the specified convolution kernel on the given image.
+	/// </summary>
+	/// <param name="imgData"></param>
+	/// <param name="bytesPerLine"></param>
+	/// <param name="imgWidth"></param>
+	/// <param name="imgHeight"></param>
+	/// <param name="convolutionKernel"></param>
+	/// <returns>Pointer to new image data if successful, nullptr otherwise.</returns>
 	uchar* convolution(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, ConvolutionKernel* convolutionKernel);
 
 	//################# Image Export functions #################//
