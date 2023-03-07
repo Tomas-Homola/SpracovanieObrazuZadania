@@ -174,12 +174,15 @@ void ImageViewer::on_actionConvolution_triggered()
 	}
 
 	IPmodul ipmodul;
-	ConvolutionKernel kernel(3);
+	ConvolutionKernel kernel;
 
-	double d[9] = { -2.0, -1.0,  0.0,
-					-1.0,  1.0,  1.0,
-					 0.0,  1.0,  2.0 };
-	kernel.setKernel(3, d);
+	double d[25] = { 0.000664574, 0.00600398, 0.01241,  0.00600398, 0.000664574,
+					 0.00600398,  0.0542418,  0.112116, 0.0542418,  0.00600398,
+					 0.01241,     0.112116,   0.234237, 0.112116,   0.01241,
+					 0.00600398,  0.0542418,  0.112116, 0.0542418,  0.00600398,
+					 0.000664574, 0.00600398, 0.01241,  0.00600398, 0.000664574
+					};
+	kernel.setKernel(5, d);
 	//kernel.printKernel();
 
 	// compute convolution

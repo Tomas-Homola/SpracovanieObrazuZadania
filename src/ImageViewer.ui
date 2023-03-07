@@ -169,6 +169,9 @@
    <property name="text">
     <string>Convolution</string>
    </property>
+   <property name="shortcut">
+    <string>Shift+C</string>
+   </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
