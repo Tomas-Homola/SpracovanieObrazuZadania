@@ -152,5 +152,6 @@ public:
 
 	static bool exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData = true);
 	static bool exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, uchar* imgData);
+	static bool ExportToPPM(std::string fileName, int width, int height, int maxValue, float* r, float* g, float* b);
 
 };

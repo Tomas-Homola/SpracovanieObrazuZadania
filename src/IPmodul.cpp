@@ -422,3 +422,32 @@ bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, i
 	return true;
 }
 
+bool IPmodul::ExportToPPM(std::string fileName, int width, int height, int maxValue, float* r, float* g, float* b)
+{
+	printf("Exporting image to ppm...\n");
+	FILE* fp = nullptr;
+	fp = fopen((fileName + ".ppm").c_str(), "w+");
+	if (fp == nullptr)
+		return false;
+
+	unsigned char scaledR = 0, scaledG = 0, scaledB = 0;
+	size_t dataSize = width * height;
+	fprintf(fp, "P3\n%d %d\n%d\n", width, height, maxValue);
+	for (size_t i = 0; i < dataSize; i++)
+	{
+		scaledR = static_cast<unsigned char>(r[i] * maxValue + 0.5);
+		scaledG = static_cast<unsigned char>(g[i] * maxValue + 0.5);
+		scaledB = static_cast<unsigned char>(b[i] * maxValue + 0.5);
+
+		fprintf(fp, "%d %d %d\t", scaledR, scaledG, scaledB);
+
+		if ((i + 1) % 70 == 0)
+			fprintf(fp, "\n");
+
+		if ((i + 1) % (dataSize / 10) == 0)
+			printf("\rExporting image to ppm... %d%% done", 10 * (i + 1) / (dataSize / 10));
+	}
+	fclose(fp);
+
+	return true;
+}
