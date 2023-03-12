@@ -6,11 +6,12 @@ bool ConvolutionKernel::setKernel(int kernelSize, double* kernel)
 
 	if (m_pKernel != nullptr) // delete old kernel data
 	{
-		free(m_pKernel); // delete old kernel
+		delete[] m_pKernel; // delete old kernel
 	}
 
 	// allocate space for new kernel
-	m_pKernel = static_cast<double*>(calloc(kernelSize * kernelSize, sizeof(double)));
+	m_pKernel = new double[kernelSize * kernelSize] {0.0};
+	//m_pKernel = static_cast<double*>(calloc(kernelSize * kernelSize, sizeof(double)));
 	if (m_pKernel == nullptr) // check if allocation was successful
 		return false;
 
@@ -44,7 +45,7 @@ IPmodul::IPmodul()
 
 IPmodul::~IPmodul()
 {
-	free(m_pImgLocalData);
+	delete[] m_pImgLocalData;
 }
 
 bool IPmodul::pixelsMirror(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const int padding)
@@ -55,16 +56,17 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const int bytesPerLine, const
 	// check if there is already some image data stored
 	if (m_pImgLocalData != nullptr)
 	{
-		free(m_pImgLocalData); // if there is, delete old data
+		delete[] m_pImgLocalData; // if there is, delete old data
 		m_pImgLocalData = nullptr;
 	}
 	
 	// compute new size
 	m_imgWidth = imgWidth + 2 * padding;
 	m_imgHeight = imgHeight + 2 * padding;
-	int size = m_imgWidth * m_imgHeight;
+	size_t size = (size_t)m_imgWidth * m_imgHeight;
 	
-	m_pImgLocalData = (double*)calloc(size, sizeof(double)); // allocate memory
+	m_pImgLocalData = new double[size] {0.0}; // allocate memory
+	//m_pImgLocalData = (double*)calloc(size, sizeof(double)); // allocate memory
 
 	if (m_pImgLocalData == nullptr) // check, if allocation was successful
 		return false;
@@ -143,9 +145,10 @@ uchar* IPmodul::pixelsUnmirror(int padding)
 	// calculate new size
 	uint newWidth  = m_imgWidth - 2 * padding;
 	uint newHeight = m_imgHeight - 2 * padding;
-	uint size = newWidth * newHeight;
+	size_t size = (size_t)newWidth * newHeight;
 
-	uchar* pImgData = (uchar*)calloc(size, sizeof(uchar)); // allocate new memory
+	uchar* pImgData = new uchar[size]{ 0 };
+	//uchar* pImgData = (uchar*)calloc(size, sizeof(uchar)); // allocate new memory
 	
 	if (pImgData == nullptr) // check, if allocation successful
 		return nullptr;
@@ -294,7 +297,8 @@ uchar* IPmodul::convolution(uchar* imgData, const int bytesPerLine, const int im
 		return nullptr;
 
 	// allocate space for new image data
-	newImgData = static_cast<uchar*>(calloc(imgWidth * imgHeight, sizeof(uchar*)));
+	newImgData = new uchar[(size_t)imgWidth * imgHeight]{ 0 };
+	//newImgData = static_cast<uchar*>(calloc(imgWidth * imgHeight, sizeof(uchar*)));
 	if (newImgData == nullptr) // check, if allocation successful
 		return nullptr;
 
