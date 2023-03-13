@@ -208,6 +208,31 @@ void ImageViewer::on_actionConvolution_triggered()
 	//QMessageBox::information(this, "File export", "Image export done.", QMessageBox::Ok);
 }
 
+void ImageViewer::on_actionExplicit_Heat_Eq_triggered()
+{
+	if (vW->isEmpty()) {
+		return;
+	}
+
+	IPmodul ip;
+
+	uchar* newImg = ip.filtrationExplicitHeatEq(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), 0.15, 1.0, 10);
+
+	// copy new image values
+	for (int i = 0; i < vW->getImgHeight(); i++)
+	{
+		for (int j = 0; j < vW->getImgWidth(); j++)
+		{
+			vW->getData()[i * vW->getBytesPerLine() + j] = newImg[i * vW->getImgWidth() + j];
+		}
+	}
+
+	// free memory
+	delete[] newImg;
+
+	vW->update();
+}
+
 void ImageViewer::on_pushButton_mirrorTest_clicked()
 {
 	if (vW->getImage() == nullptr)

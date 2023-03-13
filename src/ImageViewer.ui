@@ -97,6 +97,7 @@
     <addaction name="actionEKV_HIST"/>
     <addaction name="separator"/>
     <addaction name="actionConvolution"/>
+    <addaction name="actionExplicit_Heat_Eq"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
@@ -171,6 +172,14 @@
    </property>
    <property name="shortcut">
     <string>Shift+C</string>
+   </property>
+  </action>
+  <action name="actionExplicit_Heat_Eq">
+   <property name="text">
+    <string>Explicit Heat Eq</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+E</string>
    </property>
   </action>
  </widget>

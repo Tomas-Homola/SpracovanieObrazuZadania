@@ -38,6 +38,7 @@ private slots:
 	void on_actionFSHS_triggered();
 	void on_actionEKV_HIST_triggered();
 	void on_actionConvolution_triggered();
+	void on_actionExplicit_Heat_Eq_triggered();
 
 	void on_pushButton_mirrorTest_clicked();
 };
