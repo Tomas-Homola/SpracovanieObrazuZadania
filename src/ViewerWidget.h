@@ -29,6 +29,7 @@ public:
 	void setDataPtr() { data = img->bits(); }
 	void setPainter() { painter = new QPainter(img); }
 
+	int getBytesPerLine() { return img->bytesPerLine(); }
 	int getImgWidth() { return img->width(); };
 	int getImgHeight() { return img->height(); };
 
