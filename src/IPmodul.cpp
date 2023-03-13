@@ -351,6 +351,52 @@ uchar* IPmodul::convolution(uchar* imgData, const int bytesPerLine, const int im
 	return newImgData;
 }
 
+uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double tau, const double h, const int timeSteps)
+{
+	// mirror pixels
+	int padding = 1;
+	pixelsMirror(imgData, bytesPerLine, imgWidth, imgHeight, padding);
+
+	uchar* newData = new uchar[(size_t)imgWidth * imgHeight]{ 0 };
+	double newValue = 0.0;
+	uchar scaledValue = 0;
+	int indexC = -1, indexN = -1, indexS = -1, indexW = -1, indexE = -1, indexNew = -1;
+	int iNew = 0, jNew = 0;
+
+	// iterate through time steps
+	for (int t = 0; t < timeSteps; t++)
+	{
+		iNew = 0; jNew = 0;
+
+		// iterate through extended image
+		for (int i = padding; i < m_imgHeight - padding; i++)
+		{
+			for (int j = padding; j < m_imgWidth - padding; j++)
+			{
+				indexC = i * m_imgWidth + j;
+				indexN = (i - 1) * m_imgWidth + j;
+				indexS = (i + 1) * m_imgWidth + j;
+				indexW = i * m_imgWidth + j - 1;
+				indexE = i * m_imgWidth + j + 1;
+
+				newValue = (1.0 - 4.0 * ((tau) / (h * h))) * m_pImgLocalData[indexC] + (tau / (h * h)) * (m_pImgLocalData[indexN] + m_pImgLocalData[indexS] + m_pImgLocalData[indexW] + m_pImgLocalData[indexE]);
+
+				indexNew = iNew * imgWidth + jNew;
+				newData[indexNew] = static_cast<uchar>(newValue + 0.5);
+
+				jNew++;
+			}
+			iNew++;
+			jNew = 0;
+		}
+
+		pixelsMirror(newData, imgWidth, imgWidth, imgHeight, padding);
+	}
+
+	return newData;
+}
+
+
 bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData)
 {
 	printf("Exporting image to pgm...");

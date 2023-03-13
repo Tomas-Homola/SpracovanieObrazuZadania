@@ -23,7 +23,8 @@ public:
 	/// <param name="kernelSize">->...</param>
 	ConvolutionKernel(int kernelSize) : m_kernelSize(kernelSize)
 	{
-		m_pKernel = static_cast<double*>(calloc(kernelSize * kernelSize, sizeof(double)));
+		//m_pKernel = static_cast<double*>(calloc(kernelSize * kernelSize, sizeof(double)));
+		m_pKernel = new double[(size_t)kernelSize * kernelSize] {0.0};
 		if (m_pKernel == nullptr)
 			return;
 
@@ -34,7 +35,7 @@ public:
 	}
 
 	
-	~ConvolutionKernel() { free(m_pKernel); }
+	~ConvolutionKernel() { delete[] m_pKernel; }
 
 	int kernelSize() { return m_kernelSize; }
 	double* kernel() { return m_pKernel; }
@@ -147,6 +148,8 @@ public:
 	/// <param name="convolutionKernel"></param>
 	/// <returns>Pointer to new image data if successful, nullptr otherwise.</returns>
 	uchar* convolution(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, ConvolutionKernel* convolutionKernel);
+
+	uchar* filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double tau, const double h, const int timeSteps);
 
 	//################# Image Export functions #################//
 
