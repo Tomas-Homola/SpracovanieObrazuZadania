@@ -193,7 +193,7 @@ void ImageViewer::on_actionConvolution_triggered()
 	{
 		for (int j = 0; j < vW->getImgWidth(); j++)
 		{
-			vW->getData()[i * vW->getImage()->bytesPerLine() + j] = newImg[i * vW->getImgWidth() + j];
+			vW->getData()[i * vW->getBytesPerLine() + j] = newImg[i * vW->getImgWidth() + j];
 		}
 	}
 
