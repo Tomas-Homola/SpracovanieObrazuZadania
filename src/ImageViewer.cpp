@@ -215,8 +215,11 @@ void ImageViewer::on_actionExplicit_Heat_Eq_triggered()
 	}
 
 	IPmodul ip;
-
-	uchar* newImg = ip.filtrationExplicitHeatEq(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), 0.15, 1.0, 10);
+	int timeSteps = ui->spinBox_ExplicitTimeSteps->value();
+	double tau = ui->doubleSpinBox_ExplicitTau->value();
+	double h = 1.0;
+	
+	uchar* newImg = ip.filtrationExplicitHeatEq(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), tau, h, timeSteps);
 
 	// copy new image values
 	for (int i = 0; i < vW->getImgHeight(); i++)

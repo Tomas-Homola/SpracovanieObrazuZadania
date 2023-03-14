@@ -137,6 +137,83 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const int bytesPerLine, const
 	return true;
 }
 
+bool IPmodul::pixelsMirrorDouble(double* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const int padding)
+{
+	int indexNew = 0, indexOld = 0;
+	int temp = 0;
+
+	// check if there is already some image data stored
+	if (m_pImgLocalData != nullptr)
+	{
+		delete[] m_pImgLocalData; // if there is, delete old data
+		m_pImgLocalData = nullptr;
+	}
+
+	// compute new size
+	m_imgWidth = imgWidth + 2 * padding;
+	m_imgHeight = imgHeight + 2 * padding;
+	size_t size = (size_t)m_imgWidth * m_imgHeight;
+
+	m_pImgLocalData = new double[size] {0.0}; // allocate memory
+	//m_pImgLocalData = (double*)calloc(size, sizeof(double)); // allocate memory
+
+	if (m_pImgLocalData == nullptr) // check, if allocation was successful
+		return false;
+
+	// copy old image data
+	for (int i = 0; i < imgHeight; i++)
+	{
+		for (int j = 0; j < imgWidth; j++)
+		{
+			indexNew = (i + padding) * m_imgWidth + (j + padding);
+			indexOld = i * bytesPerLine + j;
+
+			m_pImgLocalData[indexNew] = originalImgData[indexOld];
+		}
+	}
+
+	// mirror over Upper and Lower edges
+	temp = 1;
+	for (int i = 0; i < padding; i++)
+	{
+		for (int j = padding; j < m_imgWidth - padding; j++)
+		{
+			// upper egde
+			indexOld = (i + padding) * m_imgWidth + j;
+			indexNew = (i + padding - temp) * m_imgWidth + j;
+			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
+
+			// lower edge
+			indexOld = (m_imgHeight - i - padding - 1) * m_imgWidth + j;
+			indexNew = (m_imgHeight - i - padding + temp - 1) * m_imgWidth + j;
+			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
+		}
+		temp += 2;
+	}
+
+	// mirror over Left and Right edges
+	for (int i = 0; i < m_imgHeight; i++)
+	{
+		temp = 1;
+		for (int j = 0; j < padding; j++)
+		{
+			// left edge
+			indexOld = i * m_imgWidth + (j + padding);
+			indexNew = i * m_imgWidth + (j + padding - temp);
+			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
+
+			// right edge
+			indexOld = i * m_imgWidth + (m_imgWidth - padding - 1 - j);
+			indexNew = i * m_imgWidth + (m_imgWidth - padding - 1 - j + temp);
+			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
+
+			temp += 2;
+		}
+	}
+
+	return true;
+}
+
 uchar* IPmodul::pixelsUnmirror(int padding)
 {
 	if (m_pImgLocalData == nullptr) // check, if there is some image to be cropped
@@ -357,16 +434,37 @@ uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	int padding = 1;
 	pixelsMirror(imgData, bytesPerLine, imgWidth, imgHeight, padding);
 
-	uchar* newData = new uchar[(size_t)imgWidth * imgHeight]{ 0 };
+	size_t size = (size_t)imgWidth * imgHeight;
+	uchar* resultData = new uchar[size]{ 0 };
+	double* newData = new double[size] {0.0};
+	
 	double newValue = 0.0;
 	uchar scaledValue = 0;
 	int indexC = -1, indexN = -1, indexS = -1, indexW = -1, indexE = -1, indexNew = -1;
 	int iNew = 0, jNew = 0;
 
+	double sum = 0.0;
+	double scaledValueD = 0.0;
+	uchar origValue = 0;
+
+	// compute mean value of the original image
+	for (int i = 0; i < imgHeight; i++)
+	{
+		for (int j = 0; j < imgWidth; j++)
+		{
+			origValue = imgData[i * bytesPerLine + j];
+			scaledValueD = static_cast<double>(origValue);
+			sum += scaledValueD;
+		}
+	}
+
+	printf("Original image mean value: %.10lf\n", sum / size);
+
 	// iterate through time steps
 	for (int t = 0; t < timeSteps; t++)
 	{
 		iNew = 0; jNew = 0;
+		sum = 0;
 
 		// iterate through extended image
 		for (int i = padding; i < m_imgHeight - padding; i++)
@@ -382,7 +480,7 @@ uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine,
 				newValue = (1.0 - 4.0 * ((tau) / (h * h))) * m_pImgLocalData[indexC] + (tau / (h * h)) * (m_pImgLocalData[indexN] + m_pImgLocalData[indexS] + m_pImgLocalData[indexW] + m_pImgLocalData[indexE]);
 
 				indexNew = iNew * imgWidth + jNew;
-				newData[indexNew] = static_cast<uchar>(newValue + 0.5);
+				newData[indexNew] = newValue;
 
 				jNew++;
 			}
@@ -390,10 +488,25 @@ uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine,
 			jNew = 0;
 		}
 
-		pixelsMirror(newData, imgWidth, imgWidth, imgHeight, padding);
+		// compute mean value of the image
+		for (size_t i = 0; i < size; i++)
+		{
+			sum += newData[i];
+		}
+
+		printf("Time step %d filtered image mean value: %.10lf\n", t, sum / size);
+
+		if (t != (timeSteps - 1))
+			pixelsMirrorDouble(newData, imgWidth, imgWidth, imgHeight, padding);
+	}
+	printf("\n\n");
+	// cast double data to uchar
+	for (size_t i = 0; i < size; i++)
+	{
+		resultData[i] = static_cast<uchar>(newData[i] + 0.5);
 	}
 
-	return newData;
+	return resultData;
 }
 
 

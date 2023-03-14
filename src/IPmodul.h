@@ -103,6 +103,17 @@ public:
 	bool pixelsMirror(uchar* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const int padding);
 
 	/// <summary>
+	/// Extend image by copying N pixels over its edges.
+	/// </summary>
+	/// <param name="originalImgData">-> input image data</param>
+	/// <param name="bytesPerLine">-> ...</param>
+	/// <param name="imgWidth">-> input image width</param>
+	/// <param name="imgHeight">-> input image height</param>
+	/// <param name="padding">-> number of pixels to mirror</param>
+	/// <returns>True if successful, false otherwise.</returns>
+	bool pixelsMirrorDouble(double* originalImgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const int padding);
+
+	/// <summary>
 	/// Crop extended image based on the given padding.
 	/// </summary>
 	/// <param name="padding">-> ...</param>
