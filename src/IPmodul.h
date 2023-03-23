@@ -61,6 +61,7 @@ private:
 
 	double m_histogramNormalized[256] = { 0.0 };
 	double m_histogramCumulative[256] = { 0.0 };
+
 	//################# Methods #################//
 
 	
@@ -160,7 +161,30 @@ public:
 	/// <returns>Pointer to new image data if successful, nullptr otherwise.</returns>
 	uchar* convolution(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, ConvolutionKernel* convolutionKernel);
 
+	/// <summary>
+	/// Performs filtration via explicit scheme for non-stationary heat equation.
+	/// </summary>
+	/// <param name="imgData"></param>
+	/// <param name="bytesPerLine"></param>
+	/// <param name="imgWidth"></param>
+	/// <param name="imgHeight"></param>
+	/// <param name="tau"></param>
+	/// <param name="h"></param>
+	/// <param name="timeSteps"></param>
+	/// <returns></returns>
 	uchar* filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double tau, const double h, const int timeSteps);
+
+	/// <summary>
+	/// Performs filtration via implicit scheme for non-stationary heat equation.
+	/// </summary>
+	/// <param name="imgData"></param>
+	/// <param name="bytesPerLine"></param>
+	/// <param name="imgWidth"></param>
+	/// <param name="imgHeight"></param>
+	/// <param name="tau"></param>
+	/// <param name="timeSteps"></param>
+	/// <returns></returns>
+	uchar* filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double tau, const int timeSteps);
 
 	//################# Image Export functions #################//
 

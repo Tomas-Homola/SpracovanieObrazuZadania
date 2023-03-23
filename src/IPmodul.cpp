@@ -510,6 +510,93 @@ uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine,
 }
 
 
+uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double tau, const int timeSteps)
+{
+	// mirror pixels
+	int padding = 1;
+	pixelsMirror(imgData, bytesPerLine, imgWidth, imgHeight, padding);
+
+	size_t size = (size_t)imgWidth * imgHeight;
+	uchar* resultData = new uchar[size]{ 0 };
+	double* newData = new double[size] {0.0};
+
+	double newValue = 0.0;
+	uchar scaledValue = 0;
+	int indexC = -1, indexN = -1, indexS = -1, indexW = -1, indexE = -1, indexNew = -1;
+	int iNew = 0, jNew = 0;
+
+	double sum = 0.0;
+	double scaledValueD = 0.0;
+	uchar origValue = 0;
+
+	// SOR
+	double omega = 1.25;
+	const int MAX_ITER = 1000;
+	const double TOL = 1.0E-6;
+	int iter = 0;
+
+	// compute mean value of the original image
+	for (int i = 0; i < imgHeight; i++)
+	{
+		for (int j = 0; j < imgWidth; j++)
+		{
+			origValue = imgData[i * bytesPerLine + j];
+			scaledValueD = static_cast<double>(origValue);
+			sum += scaledValueD;
+		}
+	}
+
+	printf("Original image mean value: %.10lf\n", sum / size);
+
+	// iterate through time steps
+	for (int t = 0; t < timeSteps; t++)
+	{
+		iNew = 0; jNew = 0;
+		sum = 0;
+
+		// iterate through extended image
+		for (int i = padding; i < m_imgHeight - padding; i++)
+		{
+			for (int j = padding; j < m_imgWidth - padding; j++)
+			{
+				indexC = i * m_imgWidth + j;
+				indexN = (i - 1) * m_imgWidth + j;
+				indexS = (i + 1) * m_imgWidth + j;
+				indexW = i * m_imgWidth + j - 1;
+				indexE = i * m_imgWidth + j + 1;
+
+				// tu treba dat asi SOR
+
+				indexNew = iNew * imgWidth + jNew;
+				newData[indexNew] = newValue;
+
+				jNew++;
+			}
+			iNew++;
+			jNew = 0;
+		}
+
+		// compute mean value of the image
+		for (size_t i = 0; i < size; i++)
+		{
+			sum += newData[i];
+		}
+
+		printf("Time step %d filtered image mean value: %.10lf\n", t, sum / size);
+
+		if (t != (timeSteps - 1))
+			pixelsMirrorDouble(newData, imgWidth, imgWidth, imgHeight, padding);
+	}
+	printf("\n\n");
+	// cast double data to uchar
+	for (size_t i = 0; i < size; i++)
+	{
+		resultData[i] = static_cast<uchar>(newData[i] + 0.5);
+	}
+
+	return resultData;
+}
+
 bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData)
 {
 	printf("Exporting image to pgm...");
@@ -529,8 +616,10 @@ bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, i
 			scaledValue = static_cast<unsigned char>(imgData[i] * maxValue + 0.5);
 			fprintf(fp, "%d ", scaledValue);
 
-			if ((i + 1) % 70 == 0)
+			if ((i + 1) % imgWidth == 0)
+			{
 				fprintf(fp, "\n");
+			}
 
 			if ((i + 1) % (dataSize / 10) == 0)
 				printf("\rExporting image to pgm... %d%% done", 10 * ((int)i + 1) / (dataSize / 10));
@@ -538,17 +627,30 @@ bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, i
 	}
 	else
 	{
-		for (size_t i = 0; i < dataSize; i++)
+		for (size_t i = 0; i < imgHeight; i++)
+		{
+			for (size_t j = 0; j < imgWidth; j++)
+			{
+				scaledValue = static_cast<unsigned char>(imgData[i * imgWidth + j] + 0.5);
+				fprintf(fp, "%d ", scaledValue);
+			}
+			fprintf(fp, "\n");
+		}
+
+		/*for (size_t i = 0; i < dataSize; i++)
 		{
 			scaledValue = static_cast<unsigned char>(imgData[i] + 0.5);
 			fprintf(fp, "%d ", scaledValue);
 
-			if ((i + 1) % 70 == 0)
+			if ((i + 1) % imgWidth == 0)
+			{
 				fprintf(fp, "\n");
+				printf("i+1: %d\n",i);
+			}
 
 			if ((i + 1) % (dataSize / 10) == 0)
 				printf("\rExporting image to pgm... %d%% done", 10 * ((int)i + 1) / (dataSize / 10));
-		}
+		}*/
 	}
 	printf("\n");
 	fclose(fp);

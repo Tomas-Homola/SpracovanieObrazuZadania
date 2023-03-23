@@ -57,16 +57,16 @@
         </spacer>
        </item>
        <item row="1" column="0">
-        <widget class="QGroupBox" name="groupBox_ExplicitSettings">
+        <widget class="QGroupBox" name="groupBox_HeatEqSettings">
          <property name="title">
-          <string>Expliticit scheme parameters</string>
+          <string>Heat eq filtration parameters</string>
          </property>
          <property name="flat">
           <bool>true</bool>
          </property>
          <layout class="QFormLayout" name="formLayout">
           <item row="0" column="0">
-           <widget class="QLabel" name="label_ExplicitTimeSteps">
+           <widget class="QLabel" name="label_HeatEqTimeSteps">
             <property name="text">
              <string>**Time steps:**</string>
             </property>
@@ -76,7 +76,7 @@
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QLabel" name="label_ExplicitTau">
+           <widget class="QLabel" name="label_HeatEqTau">
             <property name="text">
              <string>**tau:**</string>
             </property>
@@ -86,7 +86,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QSpinBox" name="spinBox_ExplicitTimeSteps">
+           <widget class="QSpinBox" name="spinBox_HeatEqTimeSteps">
             <property name="minimum">
              <number>1</number>
             </property>
@@ -96,7 +96,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="doubleSpinBox_ExplicitTau">
+           <widget class="QDoubleSpinBox" name="doubleSpinBox_HeatEqTau">
             <property name="minimum">
              <double>0.000000000000000</double>
             </property>
@@ -171,6 +171,7 @@
     <addaction name="separator"/>
     <addaction name="actionConvolution"/>
     <addaction name="actionExplicit_Heat_Eq"/>
+    <addaction name="actionImplicit_Heat_Eq"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
@@ -253,6 +254,14 @@
    </property>
    <property name="shortcut">
     <string>Shift+E</string>
+   </property>
+  </action>
+  <action name="actionImplicit_Heat_Eq">
+   <property name="text">
+    <string>Implicit Heat Eq</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+I</string>
    </property>
   </action>
  </widget>

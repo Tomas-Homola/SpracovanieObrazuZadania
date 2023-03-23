@@ -215,8 +215,8 @@ void ImageViewer::on_actionExplicit_Heat_Eq_triggered()
 	}
 
 	IPmodul ip;
-	int timeSteps = ui->spinBox_ExplicitTimeSteps->value();
-	double tau = ui->doubleSpinBox_ExplicitTau->value();
+	int timeSteps = ui->spinBox_HeatEqTimeSteps->value();
+	double tau = ui->doubleSpinBox_HeatEqTau->value();
 	double h = 1.0;
 	
 	uchar* newImg = ip.filtrationExplicitHeatEq(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), tau, h, timeSteps);
@@ -236,6 +236,11 @@ void ImageViewer::on_actionExplicit_Heat_Eq_triggered()
 	vW->update();
 }
 
+void ImageViewer::on_actionImplicit_Heat_Eq_triggered()
+{
+	printf("implicit\n");
+}
+
 void ImageViewer::on_pushButton_mirrorTest_clicked()
 {
 	if (vW->getImage() == nullptr)
@@ -249,12 +254,22 @@ void ImageViewer::on_pushButton_mirrorTest_clicked()
 
 	printf("mirror pixels result: %d\n", result);
 	
+
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < ipmodul.getImgWidth(); j++)
+		{
+			printf("%.1lf ", ipmodul.getImgData()[i * ipmodul.getImgWidth() + j]);
+		}
+		printf("\n\n\n");
+	}
+
 	uchar* data = ipmodul.pixelsUnmirror(N);
 	if (data == nullptr)
 		printf("unmirror unsuccessful\n");
 	else
 		printf("unmirror successful\n");
 	
-	//IPmodul::exportToPGM("../temp/test", vW->getImgWidth(), vW->getImgHeight(), 255, data);
-	IPmodul::exportToPGM("../temp/test2", ipmodul.getImgWidth(), ipmodul.getImgHeight(), 255, ipmodul.getImgData(), false);
+	//IPmodul::exportToPGM("../temp/unmirrorTest", vW->getImgWidth(), vW->getImgHeight(), 255, data);
+	IPmodul::exportToPGM("../temp/mirrorTest", ipmodul.getImgWidth(), ipmodul.getImgHeight(), 255, ipmodul.getImgData(), false);
 }
