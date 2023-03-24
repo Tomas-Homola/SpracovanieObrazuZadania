@@ -37,6 +37,52 @@ void ConvolutionKernel::printKernel()
 }
 
 
+void IPmodul::updateEdges(const int padding)
+{
+	int temp = 0;
+	int indexOld = 0;
+	int indexNew = 0;
+
+	// mirror over Upper and Lower edges
+	temp = 1;
+	for (int i = 0; i < padding; i++)
+	{
+		for (int j = padding; j < m_imgWidth - padding; j++)
+		{
+			// upper egde
+			indexOld = (i + padding) * m_imgWidth + j;
+			indexNew = (i + padding - temp) * m_imgWidth + j;
+			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
+
+			// lower edge
+			indexOld = (m_imgHeight - i - padding - 1) * m_imgWidth + j;
+			indexNew = (m_imgHeight - i - padding + temp - 1) * m_imgWidth + j;
+			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
+		}
+		temp += 2;
+	}
+
+	// mirror over Left and Right edges
+	for (int i = 0; i < m_imgHeight; i++)
+	{
+		temp = 1;
+		for (int j = 0; j < padding; j++)
+		{
+			// left edge
+			indexOld = i * m_imgWidth + (j + padding);
+			indexNew = i * m_imgWidth + (j + padding - temp);
+			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
+
+			// right edge
+			indexOld = i * m_imgWidth + (m_imgWidth - padding - 1 - j);
+			indexNew = i * m_imgWidth + (m_imgWidth - padding - 1 - j + temp);
+			m_pImgLocalData[indexNew] = m_pImgLocalData[indexOld];
+
+			temp += 2;
+		}
+	}
+}
+
 IPmodul::IPmodul()
 {
 
@@ -518,15 +564,14 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 
 	size_t size = (size_t)imgWidth * imgHeight;
 	uchar* resultData = new uchar[size]{ 0 };
-	double* newData = new double[size] {0.0};
+	double* b = new double[size] {0.0}; // right side of the system
+	double* phi = m_pImgLocalData; // = m_pImgLocalData
 
 	double newValue = 0.0;
-	uchar scaledValue = 0;
 	int indexC = -1, indexN = -1, indexS = -1, indexW = -1, indexE = -1, indexNew = -1;
-	int iNew = 0, jNew = 0;
 
 	double sum = 0.0;
-	double scaledValueD = 0.0;
+	double temp = 0.0;
 	uchar origValue = 0;
 
 	// SOR
@@ -534,6 +579,10 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	const int MAX_ITER = 1000;
 	const double TOL = 1.0E-6;
 	int iter = 0;
+	double rez = 0.0;
+	double sigmaSOR = 0.0;
+	double Aii = 1.0 + 4 * tau; // = 1 + 4*tau
+	double Aij = -tau; // = -tau
 
 	// compute mean value of the original image
 	for (int i = 0; i < imgHeight; i++)
@@ -541,40 +590,57 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 		for (int j = 0; j < imgWidth; j++)
 		{
 			origValue = imgData[i * bytesPerLine + j];
-			scaledValueD = static_cast<double>(origValue);
-			sum += scaledValueD;
+			temp = static_cast<double>(origValue);
+			sum += temp;
+
+			// set right side to u0 = original image data
+			b[i * imgWidth + j] = temp;
 		}
 	}
 
 	printf("Original image mean value: %.10lf\n", sum / size);
 
+	int i = 0, j = 0;
 	// iterate through time steps
 	for (int t = 0; t < timeSteps; t++)
 	{
-		iNew = 0; jNew = 0;
+		i = 0; j = 0;
 		sum = 0;
 
-		// iterate through extended image
-		for (int i = padding; i < m_imgHeight - padding; i++)
+		// tu treba dat asi SOR
+		iter = 0;
+		rez = 0.0;
+		do
 		{
-			for (int j = padding; j < m_imgWidth - padding; j++)
+			iter++;
+
+			// iterate over all image pixels
+			for (int I = padding; I < m_imgHeight - padding; I++)
 			{
-				indexC = i * m_imgWidth + j;
-				indexN = (i - 1) * m_imgWidth + j;
-				indexS = (i + 1) * m_imgWidth + j;
-				indexW = i * m_imgWidth + j - 1;
-				indexE = i * m_imgWidth + j + 1;
+				j = 0;
+				for (int J = padding; J < m_imgWidth - padding; J++)
+				{
+					indexC = I * m_imgWidth + J;
+					indexN = (I - 1) * m_imgWidth + J;
+					indexS = (I + 1) * m_imgWidth + J;
+					indexW = I * m_imgWidth + J - 1;
+					indexE = I * m_imgWidth + J + 1;
 
-				// tu treba dat asi SOR
+					sigmaSOR = 0.0;
+					sigmaSOR += Aij * (phi[indexN] + phi[indexS] + phi[indexE] + phi[indexW]);
 
-				indexNew = iNew * imgWidth + jNew;
-				newData[indexNew] = newValue;
+					phi[indexC] = (1.0 - omega) * phi[indexC] + (omega / Aii) * (b[i * imgWidth + j] - sigmaSOR);
 
-				jNew++;
+					j++;
+				}
+				i++;
 			}
-			iNew++;
-			jNew = 0;
-		}
+			}
+
+		} while ((iter <= MAX_ITER) && (rez > TOL));
+
+		// iterate through extended image
+		
 
 		// compute mean value of the image
 		for (size_t i = 0; i < size; i++)

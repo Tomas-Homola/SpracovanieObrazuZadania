@@ -63,7 +63,7 @@ private:
 	double m_histogramCumulative[256] = { 0.0 };
 
 	//################# Methods #################//
-
+	void updateEdges(const int padding);
 	
 public:
 	/// <summary>
@@ -89,6 +89,12 @@ public:
 
 	// Returns pointer to image histogram
 	uint* getHistogram() { return m_histogram; }
+
+	// Returns pointer to normalized image histogram
+	double* getHistogramNormalized() { return m_histogramNormalized; }
+
+	// Returns pointer to normalized image histogram
+	double* getHistogramCummulative() { return m_histogramCumulative; }
 
 	//################# Image Processing functions #################//
 
