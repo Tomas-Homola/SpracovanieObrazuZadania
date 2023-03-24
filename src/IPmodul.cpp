@@ -504,7 +504,8 @@ uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine,
 		}
 	}
 
-	printf("Original image mean value: %.10lf\n", sum / size);
+	if (printMsg)
+		printf("Original image mean value: %.10lf\n", sum / size);
 
 	// iterate through time steps
 	for (int t = 0; t < timeSteps; t++)
@@ -540,17 +541,24 @@ uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine,
 			sum += newData[i];
 		}
 
-		printf("Time step %d filtered image mean value: %.10lf\n", t, sum / size);
+		if (printMsg)
+			printf("Time step %d filtered image EXPLICIT mean value: %.10lf\n", t, sum / size);
 
 		if (t != (timeSteps - 1))
 			pixelsMirrorDouble(newData, imgWidth, imgWidth, imgHeight, padding);
 	}
-	printf("\n\n");
+
+	if (printMsg)
+		printf("\n\n");
+	
 	// cast double data to uchar
 	for (size_t i = 0; i < size; i++)
 	{
 		resultData[i] = static_cast<uchar>(newData[i] + 0.5);
 	}
+
+	// release memory
+	delete[] newData;
 
 	return resultData;
 }
@@ -562,8 +570,8 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	int padding = 1;
 	pixelsMirror(imgData, bytesPerLine, imgWidth, imgHeight, padding);
 
-	size_t size = (size_t)imgWidth * imgHeight;
-	uchar* resultData = new uchar[size]{ 0 };
+	size_t size = (size_t)imgWidth * imgHeight; // size of the original image
+	uchar* resultData = nullptr; // return data in uchar after filtration
 	double* b = new double[size] {0.0}; // right side of the system
 	double* phi = m_pImgLocalData; // = m_pImgLocalData
 
@@ -580,10 +588,10 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	const double TOL = 1.0E-6;
 	int iter = 0;
 	double rez = 0.0;
-	double sigmaSOR = 0.0;
+	double sigmaSOR = 0.0; // SOR algorithm variable
 	double Aii = 1.0 + 4 * tau; // = 1 + 4*tau
 	double Aij = -tau; // = -tau
-
+	
 	// compute mean value of the original image
 	for (int i = 0; i < imgHeight; i++)
 	{
@@ -598,7 +606,8 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 		}
 	}
 
-	printf("Original image mean value: %.10lf\n", sum / size);
+	if (printMsg)
+		printf("Original image mean value: %.10lf\n", sum / size);
 
 	int i = 0, j = 0;
 	// iterate through time steps
@@ -607,7 +616,7 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 		i = 0; j = 0;
 		sum = 0;
 
-		// tu treba dat asi SOR
+		// tu sa asi bude diat SOR
 		iter = 0;
 		rez = 0.0;
 		do
@@ -615,6 +624,7 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 			iter++;
 
 			// iterate over all image pixels
+			i = 0;
 			for (int I = padding; I < m_imgHeight - padding; I++)
 			{
 				j = 0;
@@ -635,31 +645,68 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 				}
 				i++;
 			}
+
+			// compute residuals
+			updateEdges(padding);
+
+			rez = 0.0;
+			i = 0;
+			for (int I = padding; I < m_imgHeight - padding; I++)
+			{
+				j = 0;
+				for (int J = padding; J < m_imgWidth - padding; J++)
+				{
+					indexC = I * m_imgWidth + J;
+					indexN = (I - 1) * m_imgWidth + J;
+					indexS = (I + 1) * m_imgWidth + J;
+					indexW = I * m_imgWidth + J - 1;
+					indexE = I * m_imgWidth + J + 1;
+
+					// compute Ax - b
+					temp = (Aii * phi[indexC] + Aij * (phi[indexN] + phi[indexS] + phi[indexE] + phi[indexW])) - b[i * imgWidth + j];
+					rez += temp * temp;
+
+					j++;
+				}
+				i++;
 			}
+			rez = sqrt(rez);
+			//printf("time %d -> SOR iter %d: rez = %.8lf\n", t, iter, rez);
+			if (rez < TOL)
+				break;
 
-		} while ((iter <= MAX_ITER) && (rez > TOL));
+		} while (iter <= MAX_ITER); // END SOR
 
-		// iterate through extended image
 		
-
 		// compute mean value of the image
-		for (size_t i = 0; i < size; i++)
+		sum = 0.0;
+		i = 0;
+		for (int I = padding; I < m_imgHeight - padding; I++)
 		{
-			sum += newData[i];
+			j = 0;
+			for (int J = padding; J < m_imgWidth - padding; J++)
+			{
+				indexC = I * m_imgWidth + J;
+				sum += phi[indexC];
+
+				// update b vector as the solution from the last time iteration
+				b[i * imgWidth + j] = phi[indexC];
+				j++;
+			}
+			i++;
 		}
+		
+		if (printMsg)
+			printf("Time step %d filtered image IMPLICIT mean value: %.10lf\n", t, sum / size);
 
-		printf("Time step %d filtered image mean value: %.10lf\n", t, sum / size);
-
-		if (t != (timeSteps - 1))
-			pixelsMirrorDouble(newData, imgWidth, imgWidth, imgHeight, padding);
 	}
-	printf("\n\n");
-	// cast double data to uchar
-	for (size_t i = 0; i < size; i++)
-	{
-		resultData[i] = static_cast<uchar>(newData[i] + 0.5);
-	}
+	if (printMsg)
+		printf("\n\n");
+	
+	// free memory from vector b
+	delete[] b;
 
+	resultData = pixelsUnmirror(padding);
 	return resultData;
 }
 

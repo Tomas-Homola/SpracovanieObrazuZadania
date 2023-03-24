@@ -66,6 +66,7 @@ private:
 	void updateEdges(const int padding);
 	
 public:
+	bool printMsg = true;
 	/// <summary>
 	/// Empty constructor
 	/// </summary>

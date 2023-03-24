@@ -238,7 +238,30 @@ void ImageViewer::on_actionExplicit_Heat_Eq_triggered()
 
 void ImageViewer::on_actionImplicit_Heat_Eq_triggered()
 {
-	printf("implicit\n");
+	if (vW->isEmpty()) {
+		return;
+	}
+
+	IPmodul ip;
+	//ip.printMsg = false;
+	int timeSteps = ui->spinBox_HeatEqTimeSteps->value();
+	double tau = ui->doubleSpinBox_HeatEqTau->value();
+
+	uchar* newImg = ip.filtrationImplicitHeatEq(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), tau, timeSteps);
+
+	// copy new image values
+	for (int i = 0; i < vW->getImgHeight(); i++)
+	{
+		for (int j = 0; j < vW->getImgWidth(); j++)
+		{
+			vW->getData()[i * vW->getBytesPerLine() + j] = newImg[i * vW->getImgWidth() + j];
+		}
+	}
+
+	// free memory
+	delete[] newImg;
+
+	vW->update();
 }
 
 void ImageViewer::on_pushButton_mirrorTest_clicked()
