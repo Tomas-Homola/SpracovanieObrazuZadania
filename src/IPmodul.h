@@ -3,6 +3,7 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -45,12 +46,26 @@ public:
 	void printKernel();
 };
 
+inline double diffCoefFunction1(double K, double normGradSquared) { return 1.0 / (1.0 + K * normGradSquared); }
+
 class IPmodul
 {
 private:
+
+	//################# Structs #################//
+
+	struct GradientNormSquared
+	{
+		double gradSqNorth = 1.0;
+		double gradSqSouth = 1.0;
+		double gradSqEast = 1.0;
+		double gradSqWest = 1.0;
+	};
+
 	//################# Variables #################//
 	
 	double* m_pImgLocalData = nullptr;
+	double* m_uSigma = nullptr;
 
 	uint m_imgWidth  = 0;
 	uint m_imgHeight = 0;
@@ -61,12 +76,30 @@ private:
 
 	double m_histogramNormalized[256] = { 0.0 };
 	double m_histogramCumulative[256] = { 0.0 };
+	
+	// Stores values of ||grad G_sigma * u||^2 for each edge of each pixel.
+	std::vector<GradientNormSquared> m_gradientsNormSquared = {};
 
 	//################# Methods #################//
 	void updateEdges(const int padding);
+
+
+	//------------------Perona-Malik filtration---------------------
+
+	// update edges for m_uSigma
+	void filtrationPeronaMalik_UpdateEdges(const int padding);
+
+	// Performs 1 linear diffusion step for Perona-Malik with parameter sigma, stores values to m_uSigma.
+	void filtrationPeronaMalik_LinearDiffusion(double sigma);
+
+	void filtrationPeronaMalik_ComputeGradientsNormSquared(int padding);
+
 	
 public:
+
+	// Print messages from filtration functions.
 	bool printMsg = true;
+
 	/// <summary>
 	/// Empty constructor
 	/// </summary>
@@ -192,6 +225,21 @@ public:
 	/// <param name="timeSteps"></param>
 	/// <returns></returns>
 	uchar* filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double tau, const int timeSteps);
+
+	/// <summary>
+	/// Performs filtration via semi-implicit scheme for regularized Perona-Malik equation.
+	/// </summary>
+	/// <param name="imgData"></param>
+	/// <param name="bytesPerLine"></param>
+	/// <param name="imgWidth"></param>
+	/// <param name="imgHeight"></param>
+	/// <param name="sigma">-> step for linear diffusion.</param>
+	/// <param name="tau">-> step for non-linear diffusion</param>
+	/// <param name="K">-> </param>
+	/// <param name="timeSteps"></param>
+	/// <returns></returns>
+	uchar* filtrationSemiImplicitPeronaMalik(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps);
+	// difuzny koeficient -> g(|grad u|) = 1 / (1 + K*|grad u^sigma|^2), K > 0
 
 	//################# Image Export functions #################//
 

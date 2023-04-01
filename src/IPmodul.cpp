@@ -83,6 +83,202 @@ void IPmodul::updateEdges(const int padding)
 	}
 }
 
+void IPmodul::filtrationPeronaMalik_UpdateEdges(const int padding)
+{
+	int temp = 0;
+	int indexOld = 0;
+	int indexNew = 0;
+
+	// mirror over Upper and Lower edges
+	temp = 1;
+	for (int i = 0; i < padding; i++)
+	{
+		for (int j = padding; j < m_imgWidth - padding; j++)
+		{
+			// upper egde
+			indexOld = (i + padding) * m_imgWidth + j;
+			indexNew = (i + padding - temp) * m_imgWidth + j;
+			m_uSigma[indexNew] = m_uSigma[indexOld];
+
+			// lower edge
+			indexOld = (m_imgHeight - i - padding - 1) * m_imgWidth + j;
+			indexNew = (m_imgHeight - i - padding + temp - 1) * m_imgWidth + j;
+			m_uSigma[indexNew] = m_uSigma[indexOld];
+		}
+		temp += 2;
+	}
+
+	// mirror over Left and Right edges
+	for (int i = 0; i < m_imgHeight; i++)
+	{
+		temp = 1;
+		for (int j = 0; j < padding; j++)
+		{
+			// left edge
+			indexOld = i * m_imgWidth + (j + padding);
+			indexNew = i * m_imgWidth + (j + padding - temp);
+			m_uSigma[indexNew] = m_uSigma[indexOld];
+
+			// right edge
+			indexOld = i * m_imgWidth + (m_imgWidth - padding - 1 - j);
+			indexNew = i * m_imgWidth + (m_imgWidth - padding - 1 - j + temp);
+			m_uSigma[indexNew] = m_uSigma[indexOld];
+
+			temp += 2;
+		}
+	}
+}
+
+void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
+{
+	int padding = 1;
+	int imgWidth = m_imgWidth - 2 * padding;
+
+	double* b = new double[imgWidth * imgWidth] {0.0}; // right side of the system
+	m_uSigma = new double[(size_t)m_imgWidth * m_imgHeight] {0.0}; // allocate space for uSigma, same as m_pImgLocalData
+	double* phi = m_uSigma; // = m_uSigma
+
+	double newValue = 0.0;
+	int indexC = -1, indexN = -1, indexS = -1, indexW = -1, indexE = -1;
+
+	double temp = 0.0;
+
+	// copy values from m_ImgLocalData to m_uSigma and vector b
+	int i = 0, j = 0;
+	for (int I = padding; I < m_imgHeight - padding; I++)
+	{
+		j = 0;
+		for (int J = padding; J < m_imgWidth - padding; J++)
+		{
+			// copy internal data from m_pImgLocalData to m_uSigma
+			indexC = I * m_imgWidth + J;
+			m_uSigma[indexC] = m_pImgLocalData[indexC];
+
+			// set right side to u0 = m_uSigma (original img data)
+			b[i * imgWidth + j] = m_uSigma[indexC];
+			j++;
+		}
+		i++;
+	}
+
+	// mirror edges to m_uSigma
+	filtrationPeronaMalik_UpdateEdges(padding);
+
+	// SOR variables
+	double omega = 1.25;
+	const int MAX_ITER = 1000;
+	const double TOL = 1.0E-6;
+	int iter = 0;
+	double rez = 0.0;
+	double sigmaSOR = 0.0; // SOR algorithm variable
+	double Aii = 1.0 + 4 * sigma; // = 1 + 4*sigma
+	double Aij = -sigma; // = -sigma
+
+	// iterate through time steps
+	for (int t = 0; t < 1; t++)
+	{
+		i = 0; j = 0;
+		
+		// tu sa asi bude diat SOR
+		iter = 0;
+		rez = 0.0;
+		do
+		{
+			iter++;
+
+			// iterate over all image pixels
+			i = 0;
+			for (int I = padding; I < m_imgHeight - padding; I++)
+			{
+				j = 0;
+				for (int J = padding; J < m_imgWidth - padding; J++)
+				{
+					indexC = I * m_imgWidth + J;
+					indexN = (I - 1) * m_imgWidth + J;
+					indexS = (I + 1) * m_imgWidth + J;
+					indexW = I * m_imgWidth + J - 1;
+					indexE = I * m_imgWidth + J + 1;
+
+					sigmaSOR = 0.0;
+					sigmaSOR += Aij * (phi[indexN] + phi[indexS] + phi[indexE] + phi[indexW]);
+
+					phi[indexC] = (1.0 - omega) * phi[indexC] + (omega / Aii) * (b[i * imgWidth + j] - sigmaSOR);
+
+					j++;
+				}
+				i++;
+			}
+
+			// update edges to m_uSigma
+			filtrationPeronaMalik_UpdateEdges(padding);
+
+			// compute residuals
+
+			rez = 0.0;
+			i = 0;
+			for (int I = padding; I < m_imgHeight - padding; I++)
+			{
+				j = 0;
+				for (int J = padding; J < m_imgWidth - padding; J++)
+				{
+					indexC = I * m_imgWidth + J;
+					indexN = (I - 1) * m_imgWidth + J;
+					indexS = (I + 1) * m_imgWidth + J;
+					indexW = I * m_imgWidth + J - 1;
+					indexE = I * m_imgWidth + J + 1;
+
+					// compute Ax - b
+					temp = (Aii * phi[indexC] + Aij * (phi[indexN] + phi[indexS] + phi[indexE] + phi[indexW])) - b[i * imgWidth + j];
+					rez += temp * temp;
+
+					j++;
+				}
+				i++;
+			}
+			rez = sqrt(rez);
+			//printf("time %d -> SOR iter %d: rez = %.8lf\n", t, iter, rez);
+			if (rez < TOL) // if residuals small enough -> break
+				break;
+
+		} while (iter <= MAX_ITER); // END SOR
+
+		printf("PM linear filtration -> SOR stop iter %d: rez = %.8lf\n", iter, rez);
+	}
+
+	// free memory from vector b
+	delete[] b;
+}
+
+void IPmodul::filtrationPeronaMalik_ComputeGradientsNormSquared(int padding)
+{
+	double gradX = 0.0;
+	double gradY = 0.0;
+
+	int NW = 0, N = 0, NE = 0;
+	int W = 0,  p = 0, E = 0;
+	int SW = 0, S = 0, SE = 0;
+
+	// iterate over all internal img pixels of m_uSigma
+	for (int i = padding; i < m_imgHeight - padding; i++)
+	{
+		for (int j = padding; j < m_imgWidth - padding; j++)
+		{
+			// EAST edge
+
+
+			// NORTH edge
+
+
+			// WEST edge
+
+
+			// SOUTH edge
+
+
+		}
+	}
+}
+
 IPmodul::IPmodul()
 {
 
@@ -593,6 +789,7 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	double Aij = -tau; // = -tau
 	
 	// compute mean value of the original image
+	// TODO: prepisat na cyklus cez m_pLocalImgData, nech sa nemusi robit znovu static_cast
 	for (int i = 0; i < imgHeight; i++)
 	{
 		for (int j = 0; j < imgWidth; j++)
@@ -677,6 +874,7 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 
 		} while (iter <= MAX_ITER); // END SOR
 
+		printf("time %d -> SOR stop iter %d: rez = %.8lf\n", t, iter, rez);
 		
 		// compute mean value of the image
 		sum = 0.0;
@@ -706,6 +904,202 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	// free memory from vector b
 	delete[] b;
 
+	resultData = pixelsUnmirror(padding);
+	return resultData;
+}
+
+uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps)
+{
+	// mirror pixels
+	int padding = 1;
+	pixelsMirror(imgData, bytesPerLine, imgWidth, imgHeight, padding);
+
+	size_t size = (size_t)imgWidth * imgHeight; // size of the original image
+	uchar* resultData = nullptr; // return data in uchar after filtration
+
+	double* b = new double[size] {0.0}; // right side of the system
+	double* phi = m_pImgLocalData; // = m_pImgLocalData
+
+	// resize vector for gradient norms squared
+	m_gradientsNormSquared.resize((size_t)m_imgWidth * m_imgHeight, GradientNormSquared());
+
+	// indices
+	int indexC = -1, indexN = -1, indexS = -1, indexW = -1, indexE = -1, indexNew = -1;
+
+	// auxilliary variables
+	double newValue = 0.0;
+	double sum = 0.0;
+	double temp = 0.0;
+	uchar origValue = 0;
+
+	// system matrix coefficients
+	double g_N = 0.0; // diffusion ceofficient over North edge
+	double g_S = 0.0; // diffusion ceofficient over South edge
+	double g_E = 0.0; // diffusion ceofficient over East  edge
+	double g_W = 0.0; // diffusion ceofficient over West  edge
+
+	double Aii   = 0.0; // = 1 + tau * (g_N + g_S + g_E + g_W)
+	double Aij_N = 0.0; // = - tau * g_N
+	double Aij_S = 0.0; // = - tau * g_S
+	double Aij_E = 0.0; // = - tau * g_E
+	double Aij_W = 0.0; // = - tau * g_W
+
+	// compute mean value of the original image
+	// TODO: prepisat na cyklus cez m_pLocalImgData, nech sa nemusi robit znovu static_cast
+	for (int i = 0; i < imgHeight; i++)
+	{
+		for (int j = 0; j < imgWidth; j++)
+		{
+			origValue = imgData[i * bytesPerLine + j];
+			temp = static_cast<double>(origValue);
+			sum += temp;
+
+			// set right side to u0 = original image data
+			b[i * imgWidth + j] = temp;
+		}
+	}
+
+	if (printMsg)
+		printf("Original image mean value: %.10lf\n", sum / size);
+
+
+	// SOR variables
+	double omega = 1.25;
+	const int MAX_ITER = 1000;
+	const double TOL = 1.0E-6;
+	int iter = 0;
+	double rez = 0.0;
+	double sigmaSOR = 0.0; // SOR algorithm sigma variable
+
+	int i = 0, j = 0;
+	// iterate through time steps
+	for (int t = 0; t < timeSteps; t++)
+	{
+		i = 0; j = 0;
+		sum = 0;
+
+		// perform one time step of linear diffusion with step sigma
+		filtrationPeronaMalik_LinearDiffusion(sigma);
+
+		// compute gradient norms squared from m_uSigma
+		filtrationPeronaMalik_ComputeGradientsNormSquared(padding);
+
+		// tu sa asi bude diat SOR
+		iter = 0;
+		rez = 0.0;
+		do
+		{
+			iter++;
+
+			// iterate over all image pixels
+			i = 0;
+			for (int I = padding; I < m_imgHeight - padding; I++)
+			{
+				j = 0;
+				for (int J = padding; J < m_imgWidth - padding; J++)
+				{
+					indexC = I * m_imgWidth + J;
+					indexN = (I - 1) * m_imgWidth + J;
+					indexS = (I + 1) * m_imgWidth + J;
+					indexW = I * m_imgWidth + J - 1;
+					indexE = I * m_imgWidth + J + 1;
+
+					// compute system matrix coefficients
+					g_N = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqNorth);
+					g_S = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqSouth);
+					g_E = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqEast);
+					g_W = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqWest);
+
+					Aii   = 1 + tau * (g_N + g_S + g_E + g_W);
+					Aij_N = -tau * g_N;
+					Aij_S = -tau * g_S;
+					Aij_E = -tau * g_E;
+					Aij_W = -tau * g_W;
+
+					sigmaSOR = Aij_N * phi[indexN] + Aij_S * phi[indexS] + Aij_E * phi[indexE] + Aij_W * phi[indexW];
+
+					phi[indexC] = (1.0 - omega) * phi[indexC] + (omega / Aii) * (b[i * imgWidth + j] - sigmaSOR);
+
+					j++;
+				}
+				i++;
+			}
+
+			// compute residuals
+			updateEdges(padding);
+
+			rez = 0.0;
+			i = 0;
+			for (int I = padding; I < m_imgHeight - padding; I++)
+			{
+				j = 0;
+				for (int J = padding; J < m_imgWidth - padding; J++)
+				{
+					indexC = I * m_imgWidth + J;
+					indexN = (I - 1) * m_imgWidth + J;
+					indexS = (I + 1) * m_imgWidth + J;
+					indexW = I * m_imgWidth + J - 1;
+					indexE = I * m_imgWidth + J + 1;
+
+					// compute system matrix coefficients
+					g_N = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqNorth);
+					g_S = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqSouth);
+					g_E = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqEast);
+					g_W = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqWest);
+
+					Aii = 1 + tau * (g_N + g_S + g_E + g_W);
+					Aij_N = -tau * g_N;
+					Aij_S = -tau * g_S;
+					Aij_E = -tau * g_E;
+					Aij_W = -tau * g_W;
+
+					// compute Ax - b
+					temp = (Aii * phi[indexC] + Aij_N * phi[indexN] + Aij_S * phi[indexS] + Aij_E * phi[indexE] + Aij_W * phi[indexW]) - b[i * imgWidth + j];
+					rez += temp * temp;
+
+					j++;
+				}
+				i++;
+			}
+			rez = sqrt(rez);
+			//printf("time %d -> SOR iter %d: rez = %.8lf\n", t, iter, rez);
+			if (rez < TOL)
+				break;
+
+		} while (iter <= MAX_ITER); // END SOR
+
+		printf("time %d -> SOR stop iter %d: rez = %.8lf\n", t, iter, rez);
+
+		// compute mean value of the image
+		sum = 0.0;
+		i = 0;
+		for (int I = padding; I < m_imgHeight - padding; I++)
+		{
+			j = 0;
+			for (int J = padding; J < m_imgWidth - padding; J++)
+			{
+				indexC = I * m_imgWidth + J;
+				sum += phi[indexC];
+
+				// update b vector as the solution from the last time iteration
+				b[i * imgWidth + j] = phi[indexC];
+				j++;
+			}
+			i++;
+		}
+
+		if (printMsg)
+			printf("Time step %d filtered image PERONA-MALIK mean value: %.10lf\n", t, sum / size);
+
+	}
+	if (printMsg)
+		printf("\n\n");
+
+	delete[] b; // clear space for vector b
+	delete[] m_uSigma; // clear space for m_uSigma
+	m_gradientsNormSquared.clear(); // clear vector for gradient norms squared
+
+	// return filtered data
 	resultData = pixelsUnmirror(padding);
 	return resultData;
 }
@@ -823,7 +1217,7 @@ bool IPmodul::ExportToPPM(std::string fileName, int width, int height, int maxVa
 			fprintf(fp, "\n");
 
 		if ((i + 1) % (dataSize / 10) == 0)
-			printf("\rExporting image to ppm... %d%% done", 10 * (i + 1) / (dataSize / 10));
+			printf("\rExporting image to ppm... %llu%% done", 10 * (i + 1) / (dataSize / 10));
 	}
 	fclose(fp);
 
