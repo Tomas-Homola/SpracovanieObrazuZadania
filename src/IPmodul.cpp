@@ -133,8 +133,9 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 {
 	int padding = 1;
 	int imgWidth = m_imgWidth - 2 * padding;
+	int imgHeight = m_imgHeight - 2 * padding;
 
-	double* b = new double[imgWidth * imgWidth] {0.0}; // right side of the system
+	double* b = new double[imgWidth * imgHeight] {0.0}; // right side of the system
 	double* phi = m_uSigma; // = m_uSigma
 
 	double newValue = 0.0;
@@ -155,6 +156,7 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 
 			// set right side to u0 = m_uSigma (original img data)
 			b[i * imgWidth + j] = m_uSigma[indexC];
+
 			j++;
 		}
 		i++;
@@ -166,7 +168,7 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 	// SOR variables
 	double omega = 1.25;
 	const int MAX_ITER = 1000;
-	const double TOL = 1.0E-6;
+	const double TOL = 1.0E-7;
 	int iter = 0;
 	double rez = 0.0;
 	double sigmaSOR = 0.0; // SOR algorithm variable
@@ -241,7 +243,7 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 
 		} while (iter <= MAX_ITER); // END SOR
 
-		printf("PM linear filtration -> SOR stop iter %d: rez = %.8lf\n", iter, rez);
+		//printf("PM linear filtration -> SOR stop iter %d: rez = %.8lf\n", iter, rez);
 	}
 
 	// free memory from vector b
@@ -993,14 +995,14 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 	// SOR variables
 	double omega = 1.25;
 	const int MAX_ITER = 1000;
-	const double TOL = 1.0E-6;
+	const double TOL = 1.0E-7;
 	int iter = 0;
 	double rez = 0.0;
 	double sigmaSOR = 0.0; // SOR algorithm sigma variable
 
 	int i = 0, j = 0;
 	// iterate through time steps
-	for (int t = 0; t < timeSteps; t++)
+	for (int t = 1; t <= timeSteps; t++)
 	{
 		i = 0; j = 0;
 		sum = 0;

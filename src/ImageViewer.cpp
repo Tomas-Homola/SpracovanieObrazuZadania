@@ -266,8 +266,6 @@ void ImageViewer::on_actionImplicit_Heat_Eq_triggered()
 
 void ImageViewer::on_actionPerona_Malik_model_triggered()
 {
-	printf("Perona-Malik test\n");
-
 	if (vW->isEmpty()) {
 		return;
 	}
