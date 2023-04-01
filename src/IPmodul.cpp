@@ -135,7 +135,6 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 	int imgWidth = m_imgWidth - 2 * padding;
 
 	double* b = new double[imgWidth * imgWidth] {0.0}; // right side of the system
-	m_uSigma = new double[(size_t)m_imgWidth * m_imgHeight] {0.0}; // allocate space for uSigma, same as m_pImgLocalData
 	double* phi = m_uSigma; // = m_uSigma
 
 	double newValue = 0.0;
@@ -254,26 +253,53 @@ void IPmodul::filtrationPeronaMalik_ComputeGradientsNormSquared(int padding)
 	double gradX = 0.0;
 	double gradY = 0.0;
 
+	double h = 1.0;
+
 	int NW = 0, N = 0, NE = 0;
 	int W = 0,  p = 0, E = 0;
 	int SW = 0, S = 0, SE = 0;
 
 	// iterate over all internal img pixels of m_uSigma
-	for (int i = padding; i < m_imgHeight - padding; i++)
+	for (int I = padding; I < m_imgHeight - padding; I++)
 	{
-		for (int j = padding; j < m_imgWidth - padding; j++)
+		for (int J = padding; J < m_imgWidth - padding; J++)
 		{
-			// EAST edge
+			// compute correct indices
+			NW = (I - 1) * m_imgWidth + (J - 1);
+			N = (I - 1) * m_imgWidth + J;
+			NE = (I - 1) * m_imgWidth + (J + 1)
+				;
+			W = I * m_imgWidth + (J - 1);
+			p = I * m_imgWidth + J;
+			E = I * m_imgWidth + (J + 1);
 
+			SW = (I + 1) * m_imgWidth + (J - 1);
+			S = (I + 1) * m_imgWidth + J;
+			SE = (I + 1) * m_imgWidth + (J + 1);
+
+			// EAST edge
+			gradX = (m_uSigma[E] - m_uSigma[p]) / h;
+			gradY = (m_uSigma[N] + m_uSigma[NE] - m_uSigma[S] - m_uSigma[SE]) / (4.0 * h);
+
+			m_gradientsNormSquared[p].gradSqEast = gradX * gradX + gradY * gradY;
 
 			// NORTH edge
+			gradX = (m_uSigma[W] + m_uSigma[NW] - m_uSigma[E] - m_uSigma[NE]) / (4.0 * h);
+			gradY = (m_uSigma[N] - m_uSigma[p]) / h;
 
+			m_gradientsNormSquared[p].gradSqNorth = gradX * gradX + gradY * gradY;
 
 			// WEST edge
+			gradX = (m_uSigma[W] - m_uSigma[p]) / h;
+			gradY = (m_uSigma[S] + m_uSigma[SW] - m_uSigma[N] - m_uSigma[NW]) / (4.0 * h);
 
+			m_gradientsNormSquared[p].gradSqWest = gradX * gradX + gradY * gradY;
 
 			// SOUTH edge
+			gradX = (m_uSigma[E] + m_uSigma[SE] - m_uSigma[W] - m_uSigma[SW]) / (4.0 * h);
+			gradY = (m_uSigma[S] - m_uSigma[p]) / h;
 
+			m_gradientsNormSquared[p].gradSqSouth = gradX * gradX + gradY * gradY;
 
 		}
 	}
@@ -919,6 +945,7 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 
 	double* b = new double[size] {0.0}; // right side of the system
 	double* phi = m_pImgLocalData; // = m_pImgLocalData
+	m_uSigma = new double[(size_t)m_imgWidth * m_imgHeight] {0.0}; // allocate space for uSigma, same as m_pImgLocalData
 
 	// resize vector for gradient norms squared
 	m_gradientsNormSquared.resize((size_t)m_imgWidth * m_imgHeight, GradientNormSquared());
