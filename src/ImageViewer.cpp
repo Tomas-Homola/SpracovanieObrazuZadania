@@ -264,6 +264,38 @@ void ImageViewer::on_actionImplicit_Heat_Eq_triggered()
 	vW->update();
 }
 
+void ImageViewer::on_actionPerona_Malik_model_triggered()
+{
+	printf("Perona-Malik test\n");
+
+	if (vW->isEmpty()) {
+		return;
+	}
+
+	IPmodul ip;
+	//ip.printMsg = false;
+	int timeSteps = ui->spinBox_nonLinearDiffTimeSteps->value();
+	double tau = ui->doubleSpinBox_NonLinearDiffTau->value();
+	double sigma = ui->doubleSpinBox_NonLinearDiffSigma->value();
+	double K = ui->doubleSpinBox_NonLinearDiffParameterK->value();
+	
+	uchar* newImg = ip.filtrationSemiImplicitPeronaMalik(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), sigma, tau, K, timeSteps);
+
+	// copy new image values
+	for (int i = 0; i < vW->getImgHeight(); i++)
+	{
+		for (int j = 0; j < vW->getImgWidth(); j++)
+		{
+			vW->getData()[i * vW->getBytesPerLine() + j] = newImg[i * vW->getImgWidth() + j];
+		}
+	}
+
+	// free memory
+	delete[] newImg;
+
+	vW->update();
+}
+
 void ImageViewer::on_pushButton_mirrorTest_clicked()
 {
 	if (vW->getImage() == nullptr)
