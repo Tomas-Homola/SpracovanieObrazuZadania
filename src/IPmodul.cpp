@@ -168,7 +168,7 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 	// SOR variables
 	double omega = 1.25;
 	const int MAX_ITER = 1000;
-	const double TOL = 1.0E-7;
+	const double TOL = 1.0E-6;
 	int iter = 0;
 	double rez = 0.0;
 	double sigmaSOR = 0.0; // SOR algorithm variable
@@ -258,7 +258,7 @@ void IPmodul::filtrationPeronaMalik_ComputeGradientsNormSquared(int padding)
 	double h = 1.0;
 
 	int NW = 0, N = 0, NE = 0;
-	int W = 0,  p = 0, E = 0;
+	int W  = 0, p = 0, E  = 0;
 	int SW = 0, S = 0, SE = 0;
 
 	// iterate over all internal img pixels of m_uSigma
@@ -268,15 +268,15 @@ void IPmodul::filtrationPeronaMalik_ComputeGradientsNormSquared(int padding)
 		{
 			// compute correct indices
 			NW = (I - 1) * m_imgWidth + (J - 1);
-			N = (I - 1) * m_imgWidth + J;
-			NE = (I - 1) * m_imgWidth + (J + 1)
-				;
+			N  = (I - 1) * m_imgWidth + J;
+			NE = (I - 1) * m_imgWidth + (J + 1);
+
 			W = I * m_imgWidth + (J - 1);
 			p = I * m_imgWidth + J;
 			E = I * m_imgWidth + (J + 1);
 
 			SW = (I + 1) * m_imgWidth + (J - 1);
-			S = (I + 1) * m_imgWidth + J;
+			S  = (I + 1) * m_imgWidth + J;
 			SE = (I + 1) * m_imgWidth + (J + 1);
 
 			// EAST edge
@@ -989,13 +989,13 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 	}
 
 	if (printMsg)
-		printf("Original image mean value: %.10lf\n", sum / size);
+		printf("Original image mean value: %.12lf\n", sum / size);
 
 
 	// SOR variables
 	double omega = 1.25;
 	const int MAX_ITER = 1000;
-	const double TOL = 1.0E-7;
+	const double TOL = 1.0E-6;
 	int iter = 0;
 	double rez = 0.0;
 	double sigmaSOR = 0.0; // SOR algorithm sigma variable
@@ -1118,7 +1118,7 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 		}
 
 		if (printMsg)
-			printf("Time step %d filtered image PERONA-MALIK mean value: %.10lf\n", t, sum / size);
+			printf("Time step %d filtered image PERONA-MALIK mean value: %.12lf\n", t, sum / size);
 
 	}
 	if (printMsg)
