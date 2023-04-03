@@ -214,7 +214,6 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 			filtrationPeronaMalik_UpdateEdges(padding);
 
 			// compute residuals
-
 			rez = 0.0;
 			i = 0;
 			for (int I = padding; I < m_imgHeight - padding; I++)
@@ -974,7 +973,6 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 	double Aij_W = 0.0; // = - tau * g_W
 
 	// compute mean value of the original image
-	// TODO: prepisat na cyklus cez m_pLocalImgData, nech sa nemusi robit znovu static_cast
 	for (int i = 0; i < imgHeight; i++)
 	{
 		for (int j = 0; j < imgWidth; j++)
@@ -1054,9 +1052,9 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 				i++;
 			}
 
-			// compute residuals
 			updateEdges(padding);
 
+			// compute residuals
 			rez = 0.0;
 			i = 0;
 			for (int I = padding; I < m_imgHeight - padding; I++)
