@@ -62,6 +62,21 @@ private:
 		double gradSqWest = 1.0;
 	};
 
+	struct AllGradientsNormSquared
+	{
+		double uSigmaGradSqNorth = 1.0;
+		double uSigmaGradSqSouth = 1.0;
+		double uSigmaGradSqEast  = 1.0;
+		double uSigmaGradSqWest  = 1.0;
+
+		double uOrigGradNorth = 1.0;
+		double uOrigGradSouth = 1.0;
+		double uOrigGradEast = 1.0;
+		double uOrigGradWest = 1.0;
+
+		double uMeanGrad = 1.0;
+	};
+
 	//################# Variables #################//
 	
 	double* m_pImgLocalData = nullptr;
@@ -78,23 +93,33 @@ private:
 	double m_histogramCumulative[256] = { 0.0 };
 	
 	// Stores values of ||grad G_sigma * u||^2 for each edge of each pixel.
-	std::vector<GradientNormSquared> m_gradientsNormSquared = {};
+	std::vector<GradientNormSquared> m_uSigmaGradientsNormSquared = {};
+	
+	// Stores values of ||grad G_sigma * u||^2 and ||grad u|| for each edge of each pixel and ||mean grad u|| inside pixel
+	std::vector<AllGradientsNormSquared> m_GMCF_GradientNorms = {};
 
 	//################# Methods #################//
+	
+	// update local image data edges
 	void updateEdges(const int padding);
 
 
 	//------------------Perona-Malik filtration---------------------
 
 	// update edges for m_uSigma
-	void filtrationPeronaMalik_UpdateEdges(const int padding);
+	void uSigma_UpdateEdges(const int padding);
 
 	// Performs 1 linear diffusion step for Perona-Malik with parameter sigma, stores values to m_uSigma.
-	void filtrationPeronaMalik_LinearDiffusion(double sigma);
+	void uSigma_LinearDiffusion(double sigma);
 
-	void filtrationPeronaMalik_ComputeGradientsNormSquared(int padding);
+	// Compute norms of gradients squared from 1 step linear filtration -> from m_uSigma.
+	void uSigma_ComputeGradientsNormSquared(int padding);
 
-	
+	//------------------MCF/GMCF filtration---------------------
+
+	// compute all gradients - from u_Sigma and u, then mean gradient
+	void GMCF_computeAllGradients(int padding, double epsilon);
+
 public:
 
 	// Print messages from filtration functions.
@@ -239,7 +264,20 @@ public:
 	/// <param name="timeSteps"></param>
 	/// <returns></returns>
 	uchar* filtrationSemiImplicitPeronaMalik(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps);
-	// difuzny koeficient -> g(|grad u|) = 1 / (1 + K*|grad u^sigma|^2), K > 0
+	
+	/// <summary>
+	/// Performs filtration via semi-implicit Geodesic Mean Curvature Flow scheme.
+	/// </summary>
+	/// <param name="imgData">-> </param>
+	/// <param name="bytesPerLine">-> </param>
+	/// <param name="imgWidth">-> </param>
+	/// <param name="imgHeight">-> </param>
+	/// <param name="sigma">-> </param>
+	/// <param name="tau">-> </param>
+	/// <param name="K">-> if == 0 ==> Mean Curvature Flow scheme.</param>
+	/// <param name="timeSteps"></param>
+	/// <returns>...</returns>
+	uchar* filtrationSemiImplicitGMCF(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps);
 
 	//################# Image Export functions #################//
 

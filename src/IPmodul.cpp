@@ -83,7 +83,7 @@ void IPmodul::updateEdges(const int padding)
 	}
 }
 
-void IPmodul::filtrationPeronaMalik_UpdateEdges(const int padding)
+void IPmodul::uSigma_UpdateEdges(const int padding)
 {
 	int temp = 0;
 	int indexOld = 0;
@@ -129,7 +129,7 @@ void IPmodul::filtrationPeronaMalik_UpdateEdges(const int padding)
 	}
 }
 
-void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
+void IPmodul::uSigma_LinearDiffusion(double sigma)
 {
 	int padding = 1;
 	int imgWidth = m_imgWidth - 2 * padding;
@@ -163,7 +163,7 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 	}
 
 	// mirror edges to m_uSigma
-	filtrationPeronaMalik_UpdateEdges(padding);
+	uSigma_UpdateEdges(padding);
 
 	// SOR variables
 	double omega = 1.25;
@@ -211,7 +211,7 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 			}
 
 			// update edges to m_uSigma
-			filtrationPeronaMalik_UpdateEdges(padding);
+			uSigma_UpdateEdges(padding);
 
 			// compute residuals
 			rez = 0.0;
@@ -249,7 +249,7 @@ void IPmodul::filtrationPeronaMalik_LinearDiffusion(double sigma)
 	delete[] b;
 }
 
-void IPmodul::filtrationPeronaMalik_ComputeGradientsNormSquared(int padding)
+void IPmodul::uSigma_ComputeGradientsNormSquared(int padding)
 {
 	double gradX = 0.0;
 	double gradY = 0.0;
@@ -282,26 +282,127 @@ void IPmodul::filtrationPeronaMalik_ComputeGradientsNormSquared(int padding)
 			gradX = (m_uSigma[E] - m_uSigma[p]) / h;
 			gradY = (m_uSigma[N] + m_uSigma[NE] - m_uSigma[S] - m_uSigma[SE]) / (4.0 * h);
 
-			m_gradientsNormSquared[p].gradSqEast = gradX * gradX + gradY * gradY;
+			m_uSigmaGradientsNormSquared[p].gradSqEast = gradX * gradX + gradY * gradY;
 
 			// NORTH edge
 			gradX = (m_uSigma[W] + m_uSigma[NW] - m_uSigma[E] - m_uSigma[NE]) / (4.0 * h);
 			gradY = (m_uSigma[N] - m_uSigma[p]) / h;
 
-			m_gradientsNormSquared[p].gradSqNorth = gradX * gradX + gradY * gradY;
+			m_uSigmaGradientsNormSquared[p].gradSqNorth = gradX * gradX + gradY * gradY;
 
 			// WEST edge
 			gradX = (m_uSigma[W] - m_uSigma[p]) / h;
 			gradY = (m_uSigma[S] + m_uSigma[SW] - m_uSigma[N] - m_uSigma[NW]) / (4.0 * h);
 
-			m_gradientsNormSquared[p].gradSqWest = gradX * gradX + gradY * gradY;
+			m_uSigmaGradientsNormSquared[p].gradSqWest = gradX * gradX + gradY * gradY;
 
 			// SOUTH edge
 			gradX = (m_uSigma[E] + m_uSigma[SE] - m_uSigma[W] - m_uSigma[SW]) / (4.0 * h);
 			gradY = (m_uSigma[S] - m_uSigma[p]) / h;
 
-			m_gradientsNormSquared[p].gradSqSouth = gradX * gradX + gradY * gradY;
+			m_uSigmaGradientsNormSquared[p].gradSqSouth = gradX * gradX + gradY * gradY;
 
+		}
+	}
+}
+
+void IPmodul::GMCF_computeAllGradients(int padding, double epsilon)
+{
+	double gradX = 0.0;
+	double gradY = 0.0;
+	double gradMean = 0.0;
+
+	double h = 1.0;
+
+	int NW = 0, N = 0, NE = 0;
+	int W  = 0, p = 0, E  = 0;
+	int SW = 0, S = 0, SE = 0;
+
+	double* dataOrig = m_pImgLocalData;
+
+	double eps2 = epsilon * epsilon;
+	
+	// iterate over all internal img pixels of m_uSigma and m_pImgLocalData
+	for (int I = padding; I < m_imgHeight - padding; I++)
+	{
+		for (int J = padding; J < m_imgWidth - padding; J++)
+		{
+			// compute correct indices
+			NW = (I - 1) * m_imgWidth + (J - 1);
+			N  = (I - 1) * m_imgWidth + J;
+			NE = (I - 1) * m_imgWidth + (J + 1);
+
+			W = I * m_imgWidth + (J - 1);
+			p = I * m_imgWidth + J;
+			E = I * m_imgWidth + (J + 1);
+
+			SW = (I + 1) * m_imgWidth + (J - 1);
+			S  = (I + 1) * m_imgWidth + J;
+			SE = (I + 1) * m_imgWidth + (J + 1);
+
+			//----- EAST edge -----//
+			// uSigma
+			gradX = (m_uSigma[E] - m_uSigma[p]) / h;
+			gradY = (m_uSigma[N] + m_uSigma[NE] - m_uSigma[S] - m_uSigma[SE]) / (4.0 * h);
+			
+			m_GMCF_GradientNorms[p].uSigmaGradSqEast = gradX * gradX + gradY * gradY;
+
+			// original data
+			gradX = (dataOrig[E] - dataOrig[p]) / h;
+			gradY = (dataOrig[N] + dataOrig[NE] - dataOrig[S] - dataOrig[SE]) / (4.0 * h);
+
+			m_GMCF_GradientNorms[p].uOrigGradEast = sqrt(eps2 + gradX * gradX + gradY * gradY);
+			gradMean += m_GMCF_GradientNorms[p].uOrigGradEast;
+
+			
+			//----- NORTH edge -----//
+			// uSigma
+			gradX = (m_uSigma[W] + m_uSigma[NW] - m_uSigma[E] - m_uSigma[NE]) / (4.0 * h);
+			gradY = (m_uSigma[N] - m_uSigma[p]) / h;
+
+			m_GMCF_GradientNorms[p].uSigmaGradSqNorth = gradX * gradX + gradY * gradY;
+
+			// original data
+			gradX = (dataOrig[W] + dataOrig[NW] - dataOrig[E] - dataOrig[NE]) / (4.0 * h);
+			gradY = (dataOrig[N] - dataOrig[p]) / h;
+
+			m_GMCF_GradientNorms[p].uOrigGradNorth = sqrt(eps2 + gradX * gradX + gradY * gradY);
+			gradMean += m_GMCF_GradientNorms[p].uOrigGradNorth;
+
+
+			//----- WEST edge -----//
+			// uSigma
+			gradX = (m_uSigma[W] - m_uSigma[p]) / h;
+			gradY = (m_uSigma[S] + m_uSigma[SW] - m_uSigma[N] - m_uSigma[NW]) / (4.0 * h);
+
+			m_GMCF_GradientNorms[p].uSigmaGradSqWest = gradX * gradX + gradY * gradY;
+
+			// original data
+			gradX = (dataOrig[W] - dataOrig[p]) / h;
+			gradY = (dataOrig[S] + dataOrig[SW] - dataOrig[N] - dataOrig[NW]) / (4.0 * h);
+
+			m_GMCF_GradientNorms[p].uOrigGradWest = sqrt(eps2 + gradX * gradX + gradY * gradY);
+			gradMean += m_GMCF_GradientNorms[p].uOrigGradWest;
+
+
+			//----- SOUTH edge -----//
+			// uSigma
+			gradX = (m_uSigma[E] + m_uSigma[SE] - m_uSigma[W] - m_uSigma[SW]) / (4.0 * h);
+			gradY = (m_uSigma[S] - m_uSigma[p]) / h;
+
+			m_GMCF_GradientNorms[p].uSigmaGradSqSouth = gradX * gradX + gradY * gradY;
+
+			// original data
+			gradX = (dataOrig[E] + dataOrig[SE] - dataOrig[W] - dataOrig[SW]) / (4.0 * h);
+			gradY = (dataOrig[S] - dataOrig[p]) / h;
+
+			m_GMCF_GradientNorms[p].uOrigGradSouth = sqrt(eps2 + gradX * gradX + gradY * gradY);
+			gradMean += m_GMCF_GradientNorms[p].uOrigGradSouth;
+
+
+			//----- Mean gradient -----//
+			m_GMCF_GradientNorms[p].uMeanGrad = gradMean / 4.0;
+			gradMean = 0.0;
 		}
 	}
 }
@@ -949,7 +1050,7 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 	m_uSigma = new double[(size_t)m_imgWidth * m_imgHeight] {0.0}; // allocate space for uSigma, same as m_pImgLocalData
 
 	// resize vector for gradient norms squared
-	m_gradientsNormSquared.resize((size_t)m_imgWidth * m_imgHeight, GradientNormSquared());
+	m_uSigmaGradientsNormSquared.resize((size_t)m_imgWidth * m_imgHeight, GradientNormSquared());
 
 	// indices
 	int indexC = -1, indexN = -1, indexS = -1, indexW = -1, indexE = -1, indexNew = -1;
@@ -1006,10 +1107,10 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 		sum = 0;
 
 		// perform one time step of linear diffusion with step sigma
-		filtrationPeronaMalik_LinearDiffusion(sigma);
+		uSigma_LinearDiffusion(sigma);
 
 		// compute gradient norms squared from m_uSigma
-		filtrationPeronaMalik_ComputeGradientsNormSquared(padding);
+		uSigma_ComputeGradientsNormSquared(padding);
 
 		// tu sa asi bude diat SOR
 		iter = 0;
@@ -1032,10 +1133,10 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 					indexE = I * m_imgWidth + J + 1;
 
 					// compute system matrix coefficients
-					g_N = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqNorth);
-					g_S = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqSouth);
-					g_E = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqEast);
-					g_W = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqWest);
+					g_N = diffCoefFunction1(K, m_uSigmaGradientsNormSquared[indexC].gradSqNorth);
+					g_S = diffCoefFunction1(K, m_uSigmaGradientsNormSquared[indexC].gradSqSouth);
+					g_E = diffCoefFunction1(K, m_uSigmaGradientsNormSquared[indexC].gradSqEast);
+					g_W = diffCoefFunction1(K, m_uSigmaGradientsNormSquared[indexC].gradSqWest);
 
 					Aii   = 1 + tau * (g_N + g_S + g_E + g_W);
 					Aij_N = -tau * g_N;
@@ -1069,10 +1170,10 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 					indexE = I * m_imgWidth + J + 1;
 
 					// compute system matrix coefficients
-					g_N = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqNorth);
-					g_S = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqSouth);
-					g_E = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqEast);
-					g_W = diffCoefFunction1(K, m_gradientsNormSquared[indexC].gradSqWest);
+					g_N = diffCoefFunction1(K, m_uSigmaGradientsNormSquared[indexC].gradSqNorth);
+					g_S = diffCoefFunction1(K, m_uSigmaGradientsNormSquared[indexC].gradSqSouth);
+					g_E = diffCoefFunction1(K, m_uSigmaGradientsNormSquared[indexC].gradSqEast);
+					g_W = diffCoefFunction1(K, m_uSigmaGradientsNormSquared[indexC].gradSqWest);
 
 					Aii = 1 + tau * (g_N + g_S + g_E + g_W);
 					Aij_N = -tau * g_N;
@@ -1095,7 +1196,8 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 
 		} while (iter <= MAX_ITER); // END SOR
 
-		printf("time %d -> SOR stop iter %d: rez = %.8lf\n", t, iter, rez);
+		// print final SOR iter and its residuum
+		//printf("time %d -> SOR stop iter %d: rez = %.8lf\n", t, iter, rez);
 
 		// compute mean value of the image
 		sum = 0.0;
@@ -1124,7 +1226,225 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 
 	delete[] b; // clear space for vector b
 	delete[] m_uSigma; // clear space for m_uSigma
-	m_gradientsNormSquared.clear(); // clear vector for gradient norms squared
+	m_uSigmaGradientsNormSquared.clear(); // clear vector for gradient norms squared
+
+	// return filtered data
+	resultData = pixelsUnmirror(padding);
+	return resultData;
+}
+
+uchar* IPmodul::filtrationSemiImplicitGMCF(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps)
+{
+	// mirror pixels
+	int padding = 1;
+	pixelsMirror(imgData, bytesPerLine, imgWidth, imgHeight, padding);
+
+	size_t size = (size_t)imgWidth * imgHeight; // size of the original image
+	uchar* resultData = nullptr; // return data in uchar after filtration
+
+	double* b = new double[size] {0.0}; // right side of the system
+	double* phi = m_pImgLocalData; // = m_pImgLocalData
+	m_uSigma = new double[(size_t)m_imgWidth * m_imgHeight] {0.0}; // allocate space for uSigma, same as m_pImgLocalData
+
+	// resize vector for gradient norms squared
+	m_GMCF_GradientNorms.resize((size_t)m_imgWidth * m_imgHeight, AllGradientsNormSquared());
+
+	// indices
+	int indexC = -1, indexN = -1, indexS = -1, indexW = -1, indexE = -1, indexNew = -1;
+
+	// auxilliary variables
+	//double newValue = 0.0;
+	double temp = 0.0;
+	uchar origValue = 0;
+
+	// system matrix coefficients
+	double g_N = 0.0; // diffusion ceofficient over North edge
+	double g_S = 0.0; // diffusion ceofficient over South edge
+	double g_E = 0.0; // diffusion ceofficient over East  edge
+	double g_W = 0.0; // diffusion ceofficient over West  edge
+
+	double gradNorm_N    = 0.0; // ||grad u||_epsilon over North edge
+	double gradNorm_S    = 0.0; // ||grad u||_epsilon over South edge
+	double gradNorm_E    = 0.0; // ||grad u||_epsilon over East  edge
+	double gradNorm_W    = 0.0; // ||grad u||_epsilon over West  edge
+	double gradNorm_mean = 0.0; // ||grad u||_epsilon in pixel
+
+	double Aii   = 0.0; // = 1 + tau * (g_N + g_S + g_E + g_W)
+	double Aij_N = 0.0; // = - tau * g_N
+	double Aij_S = 0.0; // = - tau * g_S
+	double Aij_E = 0.0; // = - tau * g_E
+	double Aij_W = 0.0; // = - tau * g_W
+
+	// set right hand for the first time iteration
+	for (int i = 0; i < imgHeight; i++)
+	{
+		for (int j = 0; j < imgWidth; j++)
+		{
+			origValue = imgData[i * bytesPerLine + j];
+			temp = static_cast<double>(origValue);
+			
+			// set right side to u0 = original image data
+			b[i * imgWidth + j] = temp;
+		}
+	}
+
+	/*if (printMsg)
+		printf("Original image mean value: %.12lf\n", sum / size);*/
+
+
+	double epsilon = 0.001;
+
+	// SOR variables
+	double omega = 1.25;
+	const int MAX_ITER = 10000;
+	const double TOL = 1.0E-3;
+	int iter = 0;
+	double rez = 0.0;
+	double sigmaSOR = 0.0; // SOR algorithm sigma variable
+
+	int i = 0, j = 0;
+
+	// iterate through time steps
+	for (int t = 1; t <= timeSteps; t++)
+	{
+		i = 0; j = 0;
+
+		// perform one time step of linear diffusion with step sigma
+		uSigma_LinearDiffusion(sigma);
+
+		// compute gradient norms
+		GMCF_computeAllGradients(padding, epsilon);
+
+		// tu sa asi bude diat SOR
+		iter = 0;
+		rez = 0.0;
+		do
+		{
+			iter++;
+
+			// iterate over all image pixels
+			i = 0;
+			for (int I = padding; I < m_imgHeight - padding; I++)
+			{
+				j = 0;
+				for (int J = padding; J < m_imgWidth - padding; J++)
+				{
+					indexC = I * m_imgWidth + J;
+					indexN = (I - 1) * m_imgWidth + J;
+					indexS = (I + 1) * m_imgWidth + J;
+					indexW = I * m_imgWidth + J - 1;
+					indexE = I * m_imgWidth + J + 1;
+
+					// compute system matrix coefficients
+					g_N = diffCoefFunction1(K, m_GMCF_GradientNorms[indexC].uSigmaGradSqNorth);
+					g_S = diffCoefFunction1(K, m_GMCF_GradientNorms[indexC].uSigmaGradSqSouth);
+					g_E = diffCoefFunction1(K, m_GMCF_GradientNorms[indexC].uSigmaGradSqEast);
+					g_W = diffCoefFunction1(K, m_GMCF_GradientNorms[indexC].uSigmaGradSqWest);
+
+					gradNorm_N = m_GMCF_GradientNorms[indexC].uOrigGradNorth;
+					gradNorm_S = m_GMCF_GradientNorms[indexC].uOrigGradSouth;
+					gradNorm_E = m_GMCF_GradientNorms[indexC].uOrigGradEast;
+					gradNorm_W = m_GMCF_GradientNorms[indexC].uOrigGradWest;
+
+					gradNorm_mean = m_GMCF_GradientNorms[indexC].uMeanGrad;
+
+					Aii = 1 + tau * gradNorm_mean * (g_N / gradNorm_N + g_S / gradNorm_S + g_E / gradNorm_E + g_W / gradNorm_W);
+					Aij_N = -tau * gradNorm_mean * (g_N / gradNorm_N);
+					Aij_S = -tau * gradNorm_mean * (g_S / gradNorm_S);
+					Aij_E = -tau * gradNorm_mean * (g_E / gradNorm_E);
+					Aij_W = -tau * gradNorm_mean * (g_W / gradNorm_W);
+
+					sigmaSOR = Aij_N * phi[indexN] + Aij_S * phi[indexS] + Aij_E * phi[indexE] + Aij_W * phi[indexW];
+
+					phi[indexC] = (1.0 - omega) * phi[indexC] + (omega / Aii) * (b[i * imgWidth + j] - sigmaSOR);
+
+					j++;
+				}
+				i++;
+			}
+
+			updateEdges(padding);
+
+			// compute residuals
+			rez = 0.0;
+			i = 0;
+			for (int I = padding; I < m_imgHeight - padding; I++)
+			{
+				j = 0;
+				for (int J = padding; J < m_imgWidth - padding; J++)
+				{
+					indexC = I * m_imgWidth + J;
+					indexN = (I - 1) * m_imgWidth + J;
+					indexS = (I + 1) * m_imgWidth + J;
+					indexW = I * m_imgWidth + J - 1;
+					indexE = I * m_imgWidth + J + 1;
+
+					// compute system matrix coefficients
+					g_N = diffCoefFunction1(K, m_GMCF_GradientNorms[indexC].uSigmaGradSqNorth);
+					g_S = diffCoefFunction1(K, m_GMCF_GradientNorms[indexC].uSigmaGradSqSouth);
+					g_E = diffCoefFunction1(K, m_GMCF_GradientNorms[indexC].uSigmaGradSqEast);
+					g_W = diffCoefFunction1(K, m_GMCF_GradientNorms[indexC].uSigmaGradSqWest);
+
+					gradNorm_N = m_GMCF_GradientNorms[indexC].uOrigGradNorth;
+					gradNorm_S = m_GMCF_GradientNorms[indexC].uOrigGradSouth;
+					gradNorm_E = m_GMCF_GradientNorms[indexC].uOrigGradEast;
+					gradNorm_W = m_GMCF_GradientNorms[indexC].uOrigGradWest;
+
+					gradNorm_mean = m_GMCF_GradientNorms[indexC].uMeanGrad;
+
+					Aii = 1 + tau * gradNorm_mean * (g_N / gradNorm_N + g_S / gradNorm_S + g_E / gradNorm_E + g_W / gradNorm_W);
+					Aij_N = -tau * gradNorm_mean * (g_N / gradNorm_N);
+					Aij_S = -tau * gradNorm_mean * (g_S / gradNorm_S);
+					Aij_E = -tau * gradNorm_mean * (g_E / gradNorm_E);
+					Aij_W = -tau * gradNorm_mean * (g_W / gradNorm_W);
+
+					// compute Ax - b
+					temp = (Aii * phi[indexC] + Aij_N * phi[indexN] + Aij_S * phi[indexS] + Aij_E * phi[indexE] + Aij_W * phi[indexW]) - b[i * imgWidth + j];
+					rez += temp * temp;
+
+					j++;
+				}
+				i++;
+			}
+			rez = sqrt(rez);
+
+			if (iter % 100 == 0)
+				printf("time %d -> SOR iter %d: rez = %.8lf\n", t, iter, rez);
+			
+			if (rez < TOL)
+				break;
+
+		} while (iter <= MAX_ITER); // END SOR
+
+		// print final SOR iter and its residuum
+		//printf("time %d -> SOR stop iter %d: rez = %.8lf\n", t, iter, rez);
+
+		// update b vector
+		i = 0;
+		for (int I = padding; I < m_imgHeight - padding; I++)
+		{
+			j = 0;
+			for (int J = padding; J < m_imgWidth - padding; J++)
+			{
+				indexC = I * m_imgWidth + J;
+
+				// update b vector as the solution from the last time iteration
+				b[i * imgWidth + j] = phi[indexC];
+				j++;
+			}
+			i++;
+		}
+
+		if (printMsg)
+			printf("Time step %d filtered image GCMF done\n", t);
+
+	}
+	if (printMsg)
+		printf("\n\n");
+
+	delete[] b; // clear space for vector b
+	delete[] m_uSigma; // clear space for m_uSigma
+	m_GMCF_GradientNorms.clear(); // clear vector for gradient norms squared
 
 	// return filtered data
 	resultData = pixelsUnmirror(padding);
