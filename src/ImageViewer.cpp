@@ -249,6 +249,8 @@ void ImageViewer::on_actionImplicit_Heat_Eq_triggered()
 
 	uchar* newImg = ip.filtrationImplicitHeatEq(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), tau, timeSteps);
 
+	//IPmodul::exportToPGM("../temp/lena_impl", vW->getImgWidth(), vW->getImgHeight(), 255, newImg);
+
 	// copy new image values
 	for (int i = 0; i < vW->getImgHeight(); i++)
 	{
@@ -278,6 +280,40 @@ void ImageViewer::on_actionPerona_Malik_model_triggered()
 	double K = ui->doubleSpinBox_NonLinearDiffParameterK->value();
 	
 	uchar* newImg = ip.filtrationSemiImplicitPeronaMalik(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), sigma, tau, K, timeSteps);
+
+	//IPmodul::exportToPGM("../temp/lena_PM", vW->getImgWidth(), vW->getImgHeight(), 255, newImg);
+
+	// copy new image values
+	for (int i = 0; i < vW->getImgHeight(); i++)
+	{
+		for (int j = 0; j < vW->getImgWidth(); j++)
+		{
+			vW->getData()[i * vW->getBytesPerLine() + j] = newImg[i * vW->getImgWidth() + j];
+		}
+	}
+
+	// free memory
+	delete[] newImg;
+
+	vW->update();
+}
+
+void ImageViewer::on_actionGMCF_triggered()
+{
+	if (vW->isEmpty()) {
+		return;
+	}
+
+	IPmodul ip;
+	//ip.printMsg = false;
+	int timeSteps = ui->spinBox_GMCFTimeSteps->value();
+	double tau = ui->doubleSpinBox_GMCFTau->value();
+	double sigma = ui->doubleSpinBox_GMCFSigma->value();
+	double K = ui->doubleSpinBox_GMCFParameterK->value();
+
+	uchar* newImg = ip.filtrationSemiImplicitGMCF(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), sigma, tau, K, timeSteps);
+
+	//IPmodul::exportToPGM("../temp/lena_PM", vW->getImgWidth(), vW->getImgHeight(), 255, newImg);
 
 	// copy new image values
 	for (int i = 0; i < vW->getImgHeight(); i++)

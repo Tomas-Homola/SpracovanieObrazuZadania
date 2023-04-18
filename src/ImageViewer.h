@@ -44,5 +44,7 @@ private slots:
 
 	void on_actionPerona_Malik_model_triggered();
 
+	void on_actionGMCF_triggered();
+
 	void on_pushButton_mirrorTest_clicked();
 };
