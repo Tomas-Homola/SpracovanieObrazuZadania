@@ -496,115 +496,128 @@ void IPmodul::GMCF_computeMatrixCoefs(int padding, double epsilon, double tau, d
 
 void IPmodul::BiCGStab_compute_v_Ap(int imgWidth, int imgHeight, int padding, double* v, double* p)
 {
-	int i = 0, j = 0;
-	int I = 0, J = 0;
-
-	int indexC = 0;
-	int indexN = 0;
-	int indexS = 0;
-	int indexW = 0;
-	int indexE = 0;
-
-	int ic = 0;
-	int in = 0;
-	int is = 0;
-	int iw = 0;
-	int ie = 0;
-
-	double Aii = 0.0;
-	double Aij_N = 0.0;
-	double Aij_S = 0.0;
-	double Aij_E = 0.0;
-	double Aij_W = 0.0;
-
-	i = 0;
-	// iterate through inner part
-	for (I = padding; I < m_imgHeight - padding; I++)
+	int I = 0;
+	omp_set_dynamic(0);
+#pragma omp parallel num_threads(m_threads)
 	{
-		j = 0;
-		for (J = padding; J < m_imgWidth - padding; J++)
+		int J = 0;
+
+		int indexC = 0;
+		int indexN = 0;
+		int indexS = 0;
+		int indexW = 0;
+		int indexE = 0;
+
+		int ic = 0;
+		int in = 0;
+		int is = 0;
+		int iw = 0;
+		int ie = 0;
+
+		double Aii = 0.0;
+		double Aij_N = 0.0;
+		double Aij_S = 0.0;
+		double Aij_E = 0.0;
+		double Aij_W = 0.0;
+
+		//i = 0;
+		// iterate through inner part 
+#pragma omp parallel for
+		for (I = padding; I < m_imgHeight - padding; I++)
 		{
-			indexC = I * m_imgWidth + J;
-			indexN = (I - 1) * m_imgWidth + J;
-			indexS = (I + 1) * m_imgWidth + J;
-			indexW = I * m_imgWidth + J - 1;
-			indexE = I * m_imgWidth + J + 1;
+			//j = 0;
+			for (J = padding; J < m_imgWidth - padding; J++)
+			{
+				/*if (J < 4)
+				{
+					printf_s("%d z vlakna %d\n", I, omp_get_thread_num());
+				}*/
 
-			ic = i * imgWidth + j;
-			in = (i - 1) * imgWidth + j;
-			is = (i + 1) * imgWidth + j;
-			iw = i * imgWidth + j - 1;
-			ie = i * imgWidth + j + 1;
+				indexC = I * m_imgWidth + J;
+				indexN = (I - 1) * m_imgWidth + J;
+				indexS = (I + 1) * m_imgWidth + J;
+				indexW = I * m_imgWidth + J - 1;
+				indexE = I * m_imgWidth + J + 1;
 
-			// compute system matrix coefficients
-			Aii   = m_matrixCoefs[indexC].Aii;
-			Aij_N = m_matrixCoefs[indexC].Aij_N;
-			Aij_S = m_matrixCoefs[indexC].Aij_S;
-			Aij_E = m_matrixCoefs[indexC].Aij_E;
-			Aij_W = m_matrixCoefs[indexC].Aij_W;
+				ic = (I - padding) * imgWidth + (J - padding);
 
-			v[ic] = Aii * p[indexC] + Aij_N * p[indexN] + Aij_S * p[indexS] + Aij_E * p[indexE] + Aij_W * p[indexW];
+				// compute system matrix coefficients
+				Aii = m_matrixCoefs[indexC].Aii;
+				Aij_N = m_matrixCoefs[indexC].Aij_N;
+				Aij_S = m_matrixCoefs[indexC].Aij_S;
+				Aij_E = m_matrixCoefs[indexC].Aij_E;
+				Aij_W = m_matrixCoefs[indexC].Aij_W;
 
-			j++;
+				v[ic] = Aii * p[indexC] + Aij_N * p[indexN] + Aij_S * p[indexS] + Aij_E * p[indexE] + Aij_W * p[indexW];
+
+				//j++;
+			}
+			//i++;
 		}
-		i++;
 	}
 }
 
 void IPmodul::BiCGStab_compute_t_As(int imgWidth, int imgHeight, int padding, double* t, double* s)
 {
-	int i = 0, j = 0;
-	int I = 0, J = 0;
-
-	int indexC = 0;
-	int indexN = 0;
-	int indexS = 0;
-	int indexW = 0;
-	int indexE = 0;
-
-	int ic = 0;
-	int in = 0;
-	int is = 0;
-	int iw = 0;
-	int ie = 0;
-
-	double Aii = 0.0;
-	double Aij_N = 0.0;
-	double Aij_S = 0.0;
-	double Aij_E = 0.0;
-	double Aij_W = 0.0;
-
-	i = 0;
-	// iterate through inner part
-	for (I = padding; I < m_imgHeight - padding; I++)
+	//int i = 0, j = 0;
+	int I = 0;
+	omp_set_dynamic(0);
+#pragma omp parallel num_threads(m_threads)
 	{
-		j = 0;
-		for (J = padding; J < m_imgWidth - padding; J++)
+		int J = 0;
+
+		int indexC = 0;
+		int indexN = 0;
+		int indexS = 0;
+		int indexW = 0;
+		int indexE = 0;
+
+		int ic = 0;
+		int in = 0;
+		int is = 0;
+		int iw = 0;
+		int ie = 0;
+
+		double Aii = 0.0;
+		double Aij_N = 0.0;
+		double Aij_S = 0.0;
+		double Aij_E = 0.0;
+		double Aij_W = 0.0;
+
+		//i = 0;
+		// iterate through inner part 
+#pragma omp parallel for
+		for (I = padding; I < m_imgHeight - padding; I++)
 		{
-			indexC = I * m_imgWidth + J;
-			indexN = (I - 1) * m_imgWidth + J;
-			indexS = (I + 1) * m_imgWidth + J;
-			indexW = I * m_imgWidth + J - 1;
-			indexE = I * m_imgWidth + J + 1;
+			//j = 0;
+			for (J = padding; J < m_imgWidth - padding; J++)
+			{
+				/*if (J < 4)
+				{
+					printf_s("%d z vlakna %d\n", I, omp_get_thread_num());
+				}*/
 
-			ic = i * imgWidth + j;
-			in = (i - 1) * imgWidth + j;
-			is = (i + 1) * imgWidth + j;
-			iw = i * imgWidth + j - 1;
-			ie = i * imgWidth + j + 1;
+				indexC = I * m_imgWidth + J;
+				indexN = (I - 1) * m_imgWidth + J;
+				indexS = (I + 1) * m_imgWidth + J;
+				indexW = I * m_imgWidth + J - 1;
+				indexE = I * m_imgWidth + J + 1;
 
-			// compute system matrix coefficients
-			Aii   = m_matrixCoefs[indexC].Aii;
-			Aij_N = m_matrixCoefs[indexC].Aij_N;
-			Aij_S = m_matrixCoefs[indexC].Aij_S;
-			Aij_E = m_matrixCoefs[indexC].Aij_E;
-			Aij_W = m_matrixCoefs[indexC].Aij_W;
+				ic = (I - padding) * imgWidth + (J - padding);
 
-			t[ic] = Aii * s[indexC] + Aij_N * s[indexN] + Aij_S * s[indexS] + Aij_E * s[indexE] + Aij_W * s[indexW];
+				// compute system matrix coefficients
+				Aii   = m_matrixCoefs[indexC].Aii;
+				Aij_N = m_matrixCoefs[indexC].Aij_N;
+				Aij_S = m_matrixCoefs[indexC].Aij_S;
+				Aij_E = m_matrixCoefs[indexC].Aij_E;
+				Aij_W = m_matrixCoefs[indexC].Aij_W;
 
-			j++;
+				t[ic] = Aii * s[indexC] + Aij_N * s[indexN] + Aij_S * s[indexS] + Aij_E * s[indexE] + Aij_W * s[indexW];
+
+				//j++;
+			}
+			//i++;
 		}
-		i++;
 	}
 }
 
@@ -1706,7 +1719,7 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 
 
 		// tu sa asi bude diat BiCGStab
-		iter = 0;
+		iter = 1;
 		rezNorm = 0.0;
 		
 		beta = 0.0;
@@ -1826,7 +1839,7 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 					i++;
 				}
 
-				printf("BCGS stop: ||s|| is small enough, iter: %d\n", iter);
+				//printf("BCGS stop: ||s|| is small enough, iter: %d\n", iter);
 				break;
 			}
 
@@ -1876,14 +1889,14 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 			}
 
 			rezNorm = sqrt(rezNorm);
-			if (iter % 1000 == 0)
+			if (iter % 500 == 0)
 			{
 				printf("iter: %4d ||r||: %.10lf\n", iter, rezNorm);
 			}
 
 			if (rezNorm < TOL)
 			{
-				printf("BCGS stop iter: ||r|| is small enough\n");
+				//printf("BCGS stop iter: ||r|| is small enough\n");
 				break;
 			}
 			

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <omp.h>
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
@@ -88,6 +89,8 @@ private:
 
 	//################# Variables #################//
 	
+	int m_threads = 1;
+
 	double* m_pImgLocalData = nullptr;
 	double* m_uSigma = nullptr;
 
@@ -107,7 +110,7 @@ private:
 	// Stores values of ||grad G_sigma * u||^2 and ||grad u|| for each edge of each pixel and ||mean grad u|| inside pixel
 	std::vector<AllGradientsNormSquared> m_GMCF_GradientNorms = {};
 
-	// 
+	// Vector of system matrix coefficients
 	std::vector<MatrixCoefs> m_matrixCoefs = {};
 
 	//################# Methods #################//
@@ -133,9 +136,10 @@ private:
 	// compute system matrix coefficients for each pixel of the image
 	void GMCF_computeMatrixCoefs(int padding, double epsilon, double tau, double K);
 
-
+	// compute v = A.p in BiCGStab
 	void BiCGStab_compute_v_Ap(int imgWidth, int imgHeight, int padding, double* v, double* p);
 
+	// compute t = A.s in BiCGStab
 	void BiCGStab_compute_t_As(int imgWidth, int imgHeight, int padding, double* t, double* s);
 public:
 
