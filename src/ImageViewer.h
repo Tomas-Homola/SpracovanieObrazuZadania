@@ -44,7 +44,9 @@ private slots:
 
 	void on_actionPerona_Malik_model_triggered();
 
-	void on_actionGMCF_triggered();
+	void on_actionMCF_triggered();
+
+	void on_checkBox_UseGMCF_clicked(bool isChecked);
 
 	void on_pushButton_mirrorTest_clicked();
 };

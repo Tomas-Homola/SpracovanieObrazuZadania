@@ -298,7 +298,7 @@ void ImageViewer::on_actionPerona_Malik_model_triggered()
 	vW->update();
 }
 
-void ImageViewer::on_actionGMCF_triggered()
+void ImageViewer::on_actionMCF_triggered()
 {
 	if (vW->isEmpty()) {
 		return;
@@ -309,11 +309,43 @@ void ImageViewer::on_actionGMCF_triggered()
 	int timeSteps = ui->spinBox_GMCFTimeSteps->value();
 	double tau = ui->doubleSpinBox_GMCFTau->value();
 	double sigma = ui->doubleSpinBox_GMCFSigma->value();
-	double K = ui->doubleSpinBox_GMCFParameterK->value();
+	double K = 0.0;
 
-	uchar* newImg = ip.filtrationSemiImplicitGMCF(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), sigma, tau, K, timeSteps);
+	if (ui->checkBox_UseGMCF->isChecked())
+		K = ui->doubleSpinBox_GMCFParameterK->value();
+	
+	uchar* newImg = nullptr;
+
+	if (ui->checkBox_UseBiCGStab->isChecked())
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+
+		newImg = ip.filtrationSemiImplicitGMCF_BiCGStab(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), sigma, tau, K, timeSteps);
+
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+		printf("BiCGStab: %.4lf seconds\n", (double)duration.count() / 1000000.0);
+	}
+	else
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+
+		newImg = ip.filtrationSemiImplicitGMCF_SOR(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight(), sigma, tau, K, timeSteps);
+
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+		printf("SOR: %.4lf seconds\n", (double)duration.count() / 1000000.0);
+
+	}
 
 	//IPmodul::exportToPGM("../temp/lena_PM", vW->getImgWidth(), vW->getImgHeight(), 255, newImg);
+
+	if (newImg == nullptr)
+	{
+		return;
+	}
 
 	// copy new image values
 	for (int i = 0; i < vW->getImgHeight(); i++)
@@ -328,6 +360,18 @@ void ImageViewer::on_actionGMCF_triggered()
 	delete[] newImg;
 
 	vW->update();
+}
+
+void ImageViewer::on_checkBox_UseGMCF_clicked(bool isChecked)
+{
+	if (!isChecked)
+	{
+		ui->doubleSpinBox_GMCFParameterK->setEnabled(false);
+	}
+	else
+	{
+		ui->doubleSpinBox_GMCFParameterK->setEnabled(true);
+	}
 }
 
 void ImageViewer::on_pushButton_mirrorTest_clicked()
