@@ -77,6 +77,15 @@ private:
 		double uMeanGrad = 1.0;
 	};
 
+	struct MatrixCoefs
+	{
+		double Aii = 1.0;
+		double Aij_N = 0.0;
+		double Aij_S = 0.0;
+		double Aij_E = 0.0;
+		double Aij_W = 0.0;
+	};
+
 	//################# Variables #################//
 	
 	double* m_pImgLocalData = nullptr;
@@ -98,11 +107,15 @@ private:
 	// Stores values of ||grad G_sigma * u||^2 and ||grad u|| for each edge of each pixel and ||mean grad u|| inside pixel
 	std::vector<AllGradientsNormSquared> m_GMCF_GradientNorms = {};
 
+	// 
+	std::vector<MatrixCoefs> m_matrixCoefs = {};
+
 	//################# Methods #################//
 	
 	// update local image data edges
 	void updateEdges(const int padding);
 
+	void updateEdges(const int padding, double* data);
 
 	//------------------Perona-Malik filtration---------------------
 
@@ -112,14 +125,18 @@ private:
 	// Performs 1 linear diffusion step for Perona-Malik with parameter sigma, stores values to m_uSigma.
 	void uSigma_LinearDiffusion(double sigma);
 
-	// Compute norms of gradients squared from 1 step linear filtration -> from m_uSigma.
-	void uSigma_ComputeGradientsNormSquared(int padding);
+	// compute system matrix coefficients for each pixel of the image for Perona-Malik model
+	void PM_computeMatrixCoefs(int padding, double tau, double K);
 
 	//------------------MCF/GMCF filtration---------------------
 
-	// compute all gradients - from u_Sigma and u, then mean gradient
-	void GMCF_computeAllGradients(int padding, double epsilon);
+	// compute system matrix coefficients for each pixel of the image
+	void GMCF_computeMatrixCoefs(int padding, double epsilon, double tau, double K);
 
+
+	void BiCGStab_compute_v_Ap(int imgWidth, int imgHeight, int padding, double* v, double* p);
+
+	void BiCGStab_compute_t_As(int imgWidth, int imgHeight, int padding, double* t, double* s);
 public:
 
 	// Print messages from filtration functions.
@@ -277,7 +294,23 @@ public:
 	/// <param name="K">-> if == 0 ==> Mean Curvature Flow scheme.</param>
 	/// <param name="timeSteps"></param>
 	/// <returns>...</returns>
-	uchar* filtrationSemiImplicitGMCF(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps);
+	uchar* filtrationSemiImplicitGMCF_SOR(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps);
+
+	/// <summary>
+	/// Performs filtration via semi-implicit Geodesic Mean Curvature Flow scheme.
+	/// </summary>
+	/// <param name="imgData">-> </param>
+	/// <param name="bytesPerLine">-> </param>
+	/// <param name="imgWidth">-> </param>
+	/// <param name="imgHeight">-> </param>
+	/// <param name="sigma">-> </param>
+	/// <param name="tau">-> </param>
+	/// <param name="K">-> if == 0 ==> Mean Curvature Flow scheme.</param>
+	/// <param name="timeSteps"></param>
+	/// <returns>...</returns>
+	uchar* filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps);
+
+
 
 	//################# Image Export functions #################//
 
