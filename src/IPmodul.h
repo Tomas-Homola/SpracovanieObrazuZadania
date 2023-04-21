@@ -103,15 +103,11 @@ private:
 
 	double m_histogramNormalized[256] = { 0.0 };
 	double m_histogramCumulative[256] = { 0.0 };
-	
-	// Stores values of ||grad G_sigma * u||^2 for each edge of each pixel.
-	std::vector<GradientNormSquared> m_uSigmaGradientsNormSquared = {};
-	
-	// Stores values of ||grad G_sigma * u||^2 and ||grad u|| for each edge of each pixel and ||mean grad u|| inside pixel
-	std::vector<AllGradientsNormSquared> m_GMCF_GradientNorms = {};
 
 	// Vector of system matrix coefficients
 	std::vector<MatrixCoefs> m_matrixCoefs = {};
+
+	double m_MCF_epsilon = 0.001;
 
 	//################# Methods #################//
 	

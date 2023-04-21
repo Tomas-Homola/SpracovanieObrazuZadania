@@ -38,6 +38,15 @@
       <layout class="QGridLayout" name="gridLayout">
        <item row="1" column="0">
         <widget class="QGroupBox" name="groupBox_HeatEqSettings">
+         <property name="font">
+          <font>
+           <italic>false</italic>
+           <bold>true</bold>
+           <underline>true</underline>
+           <strikeout>false</strikeout>
+           <kerning>true</kerning>
+          </font>
+         </property>
          <property name="title">
           <string>Heat eq filtration parameters</string>
          </property>
@@ -47,6 +56,15 @@
          <layout class="QFormLayout" name="formLayout">
           <item row="0" column="0">
            <widget class="QLabel" name="label_HeatEqTimeSteps">
+            <property name="font">
+             <font>
+              <italic>false</italic>
+              <bold>false</bold>
+              <underline>false</underline>
+              <strikeout>false</strikeout>
+              <kerning>true</kerning>
+             </font>
+            </property>
             <property name="text">
              <string>**Time steps:**</string>
             </property>
@@ -57,6 +75,15 @@
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_HeatEqTau">
+            <property name="font">
+             <font>
+              <italic>false</italic>
+              <bold>false</bold>
+              <underline>false</underline>
+              <strikeout>false</strikeout>
+              <kerning>true</kerning>
+             </font>
+            </property>
             <property name="text">
              <string>**tau:**</string>
             </property>
@@ -67,6 +94,15 @@
           </item>
           <item row="0" column="1">
            <widget class="QSpinBox" name="spinBox_HeatEqTimeSteps">
+            <property name="font">
+             <font>
+              <italic>false</italic>
+              <bold>false</bold>
+              <underline>false</underline>
+              <strikeout>false</strikeout>
+              <kerning>true</kerning>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -80,6 +116,15 @@
           </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_HeatEqTau">
+            <property name="font">
+             <font>
+              <italic>false</italic>
+              <bold>false</bold>
+              <underline>false</underline>
+              <strikeout>false</strikeout>
+              <kerning>true</kerning>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -104,7 +149,9 @@
         <widget class="QGroupBox" name="groupBox_NonLinearDiffSettings">
          <property name="font">
           <font>
-           <bold>false</bold>
+           <bold>true</bold>
+           <underline>true</underline>
+           <kerning>false</kerning>
           </font>
          </property>
          <property name="title">
@@ -116,6 +163,13 @@
          <layout class="QFormLayout" name="formLayout_2">
           <item row="0" column="0">
            <widget class="QLabel" name="label_NonLinearDiffTimeSteps">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+              <kerning>false</kerning>
+             </font>
+            </property>
             <property name="text">
              <string>**Time steps:**</string>
             </property>
@@ -126,6 +180,13 @@
           </item>
           <item row="0" column="1">
            <widget class="QSpinBox" name="spinBox_nonLinearDiffTimeSteps">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+              <kerning>false</kerning>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -139,6 +200,13 @@
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_NonLinearDiffTau">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+              <kerning>false</kerning>
+             </font>
+            </property>
             <property name="text">
              <string>**tau:**</string>
             </property>
@@ -149,6 +217,13 @@
           </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_NonLinearDiffTau">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+              <kerning>false</kerning>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -165,6 +240,13 @@
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_NonLinearDiffSigma">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+              <kerning>false</kerning>
+             </font>
+            </property>
             <property name="text">
              <string>**sigma:**</string>
             </property>
@@ -175,6 +257,13 @@
           </item>
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_NonLinearDiffSigma">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+              <kerning>false</kerning>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -194,6 +283,13 @@
           </item>
           <item row="3" column="0">
            <widget class="QLabel" name="label_NonLinearDiffParameterK">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+              <kerning>false</kerning>
+             </font>
+            </property>
             <property name="text">
              <string>**K:**</string>
             </property>
@@ -204,6 +300,13 @@
           </item>
           <item row="3" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_NonLinearDiffParameterK">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+              <kerning>false</kerning>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -243,15 +346,30 @@
        </item>
        <item row="3" column="0">
         <widget class="QGroupBox" name="groupBox_GMCF">
+         <property name="font">
+          <font>
+           <bold>true</bold>
+           <underline>true</underline>
+          </font>
+         </property>
          <property name="title">
           <string>Geodesic Mean Curvature Flow</string>
          </property>
          <property name="flat">
           <bool>true</bool>
          </property>
+         <property name="checkable">
+          <bool>false</bool>
+         </property>
          <layout class="QFormLayout" name="formLayout_3">
           <item row="0" column="0">
            <widget class="QLabel" name="label_GMCFTimeSteps">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>**Time steps:**</string>
             </property>
@@ -262,6 +380,12 @@
           </item>
           <item row="0" column="1">
            <widget class="QSpinBox" name="spinBox_GMCFTimeSteps">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -275,6 +399,12 @@
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_GMCFTau">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>**tau**:</string>
             </property>
@@ -285,6 +415,12 @@
           </item>
           <item row="1" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_GMCFTau">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -295,12 +431,18 @@
              <double>0.010000000000000</double>
             </property>
             <property name="value">
-             <double>1.000000000000000</double>
+             <double>0.400000000000000</double>
             </property>
            </widget>
           </item>
           <item row="2" column="0">
            <widget class="QLabel" name="label_GMCFSigma">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>**sigma:**</string>
             </property>
@@ -311,6 +453,12 @@
           </item>
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_GMCFSigma">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -327,6 +475,12 @@
           </item>
           <item row="3" column="0">
            <widget class="QLabel" name="label_GMCFParameterK">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>**K:**</string>
             </property>
@@ -337,6 +491,15 @@
           </item>
           <item row="3" column="1">
            <widget class="QDoubleSpinBox" name="doubleSpinBox_GMCFParameterK">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
@@ -353,6 +516,12 @@
           </item>
           <item row="5" column="0">
            <widget class="QLabel" name="label_IterMethod">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>**Solver:**</string>
             </property>
@@ -363,6 +532,12 @@
           </item>
           <item row="5" column="1">
            <widget class="QCheckBox" name="checkBox_UseBiCGStab">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>Use BiCGStab</string>
             </property>
@@ -373,6 +548,12 @@
           </item>
           <item row="4" column="0">
            <widget class="QLabel" name="label_Method">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>**Method:**</string>
             </property>
@@ -383,11 +564,17 @@
           </item>
           <item row="4" column="1">
            <widget class="QCheckBox" name="checkBox_UseGMCF">
+            <property name="font">
+             <font>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>Use GMCF</string>
             </property>
             <property name="checked">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -407,7 +594,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>693</width>
+         <width>742</width>
          <height>571</height>
         </rect>
        </property>

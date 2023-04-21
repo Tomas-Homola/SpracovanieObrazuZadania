@@ -1302,7 +1302,7 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 	// SOR variables
 	double omega = 1.25;
 	const int MAX_ITER = 1000;
-	const double TOL = 1.0E-6;
+	const double TOL = 1.0E-8;
 	int iter = 0;
 	double rez = 0.0;
 	double sigmaSOR = 0.0; // SOR algorithm sigma variable
@@ -1483,7 +1483,7 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_SOR(uchar* imgData, const int bytesPe
 
 
 	// SOR variables
-	double epsilon = 0.001; // regularization parameter for this model
+	double epsilon = m_MCF_epsilon; // regularization parameter for this model
 	double omega = 1.25;
 	const int MAX_ITER = 9999;
 	const double TOL = 1.0E-3;
@@ -1685,9 +1685,9 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 	double tempDot2 = 0.0;
 	double sNorm = 0.0;
 
-	double epsilon = 0.001; // regularization parameter for this model
+	double epsilon = m_MCF_epsilon; // regularization parameter for this model
 	int MAX_ITER = 9999;
-	double TOL = 1.0E-3;
+	double TOL = 1.0E-4;
 	int iter = 1;
 
 	double rezNorm = 0.0;
@@ -1759,7 +1759,7 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 				delete[] s;
 				delete[] t;
 
-				m_GMCF_GradientNorms.clear();
+				m_matrixCoefs.clear();
 
 				printf("Time step %d: BiCGStab failed -> rhoNew < 0\n", time);
 				return nullptr;
@@ -1956,7 +1956,7 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 
 	}
 	if (printMsg)
-		printf("\n\n");
+		printf("\n");
 
 	delete[] b; // clear space for vector b
 	delete[] m_uSigma; // clear space for m_uSigma

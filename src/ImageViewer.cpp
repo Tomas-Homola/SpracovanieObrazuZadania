@@ -325,7 +325,7 @@ void ImageViewer::on_actionMCF_triggered()
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-		printf("BiCGStab: %.4lf seconds\n", (double)duration.count() / 1000000.0);
+		printf("BiCGStab: %.4lf seconds\n\n", (double)duration.count() / 1000000.0);
 	}
 	else
 	{
@@ -336,7 +336,7 @@ void ImageViewer::on_actionMCF_triggered()
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-		printf("SOR: %.4lf seconds\n", (double)duration.count() / 1000000.0);
+		printf("SOR: %.4lf seconds\n\n", (double)duration.count() / 1000000.0);
 
 	}
 
