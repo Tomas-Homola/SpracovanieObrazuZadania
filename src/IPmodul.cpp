@@ -635,6 +635,7 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const int bytesPerLine, const
 {
 	int indexNew = 0, indexOld = 0;
 	int temp = 0;
+	double tempD = 0.0;
 
 	// check if there is already some image data stored
 	if (m_pImgLocalData != nullptr)
@@ -648,7 +649,7 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const int bytesPerLine, const
 	m_imgHeight = imgHeight + 2 * padding;
 	size_t size = (size_t)m_imgWidth * m_imgHeight;
 	
-	m_pImgLocalData = new double[size] {0.0}; // allocate memory
+	m_pImgLocalData = new double[size] {}; // allocate memory
 	//m_pImgLocalData = (double*)calloc(size, sizeof(double)); // allocate memory
 
 	if (m_pImgLocalData == nullptr) // check, if allocation was successful
@@ -661,8 +662,9 @@ bool IPmodul::pixelsMirror(uchar* originalImgData, const int bytesPerLine, const
 		{
 			indexNew = (i + padding) * m_imgWidth + (j + padding);
 			indexOld = i * bytesPerLine + j;
-
-			m_pImgLocalData[indexNew] = static_cast<double>(originalImgData[indexOld]);
+			tempD = static_cast<double>(originalImgData[indexOld]);
+			tempD = tempD / 255.0;
+			m_pImgLocalData[indexNew] = tempD;
 		}
 	}
 
@@ -823,7 +825,7 @@ uchar* IPmodul::pixelsUnmirror(int padding)
 		{
 			indexOld = i * m_imgWidth + j;
 			indexNew = iNew * newWidth + jNew;
-			pImgData[indexNew] = static_cast<uchar>(m_pImgLocalData[indexOld] + 0.5);
+			pImgData[indexNew] = static_cast<uchar>(m_pImgLocalData[indexOld] * 255.0 + 0.5);
 			
 			jNew++;
 		}
@@ -1035,8 +1037,8 @@ uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	{
 		for (int j = 0; j < imgWidth; j++)
 		{
-			origValue = imgData[i * bytesPerLine + j];
-			scaledValueD = static_cast<double>(origValue);
+			//origValue = imgData[i * bytesPerLine + j];
+			scaledValueD = m_pImgLocalData[(i + padding) * m_imgWidth + (j + padding)];
 			sum += scaledValueD;
 		}
 	}
@@ -1091,7 +1093,7 @@ uchar* IPmodul::filtrationExplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	// cast double data to uchar
 	for (size_t i = 0; i < size; i++)
 	{
-		resultData[i] = static_cast<uchar>(newData[i] + 0.5);
+		resultData[i] = static_cast<uchar>(newData[i] * 255.0 + 0.5);
 	}
 
 	// release memory
@@ -1135,8 +1137,8 @@ uchar* IPmodul::filtrationImplicitHeatEq(uchar* imgData, const int bytesPerLine,
 	{
 		for (int j = 0; j < imgWidth; j++)
 		{
-			origValue = imgData[i * bytesPerLine + j];
-			temp = static_cast<double>(origValue);
+			//origValue = imgData[i * bytesPerLine + j];
+			temp = phi[(i + padding) * m_imgWidth + (j + padding)];
 			sum += temp;
 
 			// set right side to u0 = original image data
@@ -1286,8 +1288,8 @@ uchar* IPmodul::filtrationSemiImplicitPeronaMalik(uchar* imgData, const int byte
 	{
 		for (int j = 0; j < imgWidth; j++)
 		{
-			origValue = imgData[i * bytesPerLine + j];
-			temp = static_cast<double>(origValue);
+			//origValue = imgData[i * bytesPerLine + j];
+			temp = phi[(i + padding) * m_imgWidth + (j + padding)];
 			sum += temp;
 
 			// set right side to u0 = original image data
@@ -1470,8 +1472,8 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_SOR(uchar* imgData, const int bytesPe
 	{
 		for (int j = 0; j < imgWidth; j++)
 		{
-			origValue = imgData[i * bytesPerLine + j];
-			temp = static_cast<double>(origValue);
+			//origValue = imgData[i * bytesPerLine + j];
+			temp = phi[(i + padding) * m_imgWidth + (j + padding)];
 			
 			// set right side to u0 = original image data
 			b[i * imgWidth + j] = temp;
@@ -1486,7 +1488,7 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_SOR(uchar* imgData, const int bytesPe
 	double epsilon = m_MCF_epsilon; // regularization parameter for this model
 	double omega = 1.25;
 	const int MAX_ITER = 9999;
-	const double TOL = 1.0E-3;
+	const double TOL = 10.0E-6;
 	int iter = 0;
 	double rez = 0.0;
 	double sigmaSOR = 0.0; // SOR algorithm sigma variable
@@ -1506,8 +1508,14 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_SOR(uchar* imgData, const int bytesPe
 		GMCF_computeMatrixCoefs(padding, epsilon, tau, K);
 
 		// tu sa asi bude diat SOR
-		iter = 0;
+		iter = -1;
 		rez = 0.0;
+
+		// always start from zeros
+		for (int k = 0; k < size2; k++)
+		{
+			phi[k] = 0.0;
+		}
 
 		do
 		{
@@ -1535,7 +1543,8 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_SOR(uchar* imgData, const int bytesPe
 
 					sigmaSOR = Aij_N * phi[indexN] + Aij_S * phi[indexS] + Aij_E * phi[indexE] + Aij_W * phi[indexW];
 
-					phi[indexC] = (1.0 - omega) * phi[indexC] + (omega / Aii) * (b[i * imgWidth + j] - sigmaSOR);
+					phi[indexC] = phi[indexC] + omega * ((b[i * imgWidth + j] - sigmaSOR) / Aii - phi[indexC]);
+					//phi[indexC] = (1.0 - omega) * phi[indexC] + (omega / Aii) * (b[i * imgWidth + j] - sigmaSOR);
 
 					j++;
 				}
@@ -1659,8 +1668,8 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 	{
 		for (j = 0; j < imgWidth; j++)
 		{
-			origValue = imgData[i * bytesPerLine + j];
-			temp = static_cast<double>(origValue);
+			//origValue = imgData[i * bytesPerLine + j];
+			temp = xSol[(i + padding) * m_imgWidth + (j + padding)];
 
 			// set right side to u0 = original image data
 			b[i * imgWidth + j] = temp;
@@ -1687,7 +1696,7 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 
 	double epsilon = m_MCF_epsilon; // regularization parameter for this model
 	int MAX_ITER = 9999;
-	double TOL = 1.0E-4;
+	double TOL = 10.0E-6;
 	int iter = 1;
 
 	double rezNorm = 0.0;

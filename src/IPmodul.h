@@ -107,7 +107,7 @@ private:
 	// Vector of system matrix coefficients
 	std::vector<MatrixCoefs> m_matrixCoefs = {};
 
-	double m_MCF_epsilon = 0.001;
+	double m_MCF_epsilon = 0.01; // 0.01
 
 	//################# Methods #################//
 	

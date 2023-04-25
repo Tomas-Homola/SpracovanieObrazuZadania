@@ -311,13 +311,13 @@
              <set>Qt::AlignCenter</set>
             </property>
             <property name="maximum">
-             <double>100.000000000000000</double>
+             <double>5000.000000000000000</double>
             </property>
             <property name="singleStep">
              <double>0.010000000000000</double>
             </property>
             <property name="value">
-             <double>0.100000000000000</double>
+             <double>500.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -504,13 +504,13 @@
              <set>Qt::AlignCenter</set>
             </property>
             <property name="maximum">
-             <double>100.000000000000000</double>
+             <double>5000.000000000000000</double>
             </property>
             <property name="singleStep">
              <double>0.010000000000000</double>
             </property>
             <property name="value">
-             <double>0.100000000000000</double>
+             <double>500.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -594,7 +594,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>742</width>
+         <width>740</width>
          <height>571</height>
         </rect>
        </property>
