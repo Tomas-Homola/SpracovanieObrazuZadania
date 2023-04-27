@@ -89,7 +89,7 @@ private:
 
 	//################# Variables #################//
 	
-	int m_threads = 1;
+	int m_threads = 2;
 
 	double* m_pImgLocalData = nullptr;
 	double* m_uSigma = nullptr;

@@ -500,6 +500,7 @@ void IPmodul::BiCGStab_compute_v_Ap(int imgWidth, int imgHeight, int padding, do
 	omp_set_dynamic(0);
 #pragma omp parallel num_threads(m_threads)
 	{
+		//printf("v=A.p: proc %d\n", omp_get_thread_num());
 		int J = 0;
 
 		int indexC = 0;
@@ -522,7 +523,7 @@ void IPmodul::BiCGStab_compute_v_Ap(int imgWidth, int imgHeight, int padding, do
 
 		//i = 0;
 		// iterate through inner part 
-#pragma omp parallel for
+#pragma omp for
 		for (I = padding; I < m_imgHeight - padding; I++)
 		{
 			//j = 0;
@@ -564,6 +565,8 @@ void IPmodul::BiCGStab_compute_t_As(int imgWidth, int imgHeight, int padding, do
 	omp_set_dynamic(0);
 #pragma omp parallel num_threads(m_threads)
 	{
+		//printf("t=As: proc %d\n", omp_get_thread_num());
+
 		int J = 0;
 
 		int indexC = 0;
@@ -586,7 +589,7 @@ void IPmodul::BiCGStab_compute_t_As(int imgWidth, int imgHeight, int padding, do
 
 		//i = 0;
 		// iterate through inner part 
-#pragma omp parallel for
+#pragma omp for
 		for (I = padding; I < m_imgHeight - padding; I++)
 		{
 			//j = 0;
@@ -1695,11 +1698,14 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 	double sNorm = 0.0;
 
 	double epsilon = m_MCF_epsilon; // regularization parameter for this model
-	int MAX_ITER = 9999;
+	int MAX_ITER = 10000;
 	double TOL = 10.0E-6;
 	int iter = 1;
 
 	double rezNorm = 0.0;
+
+	m_threads = omp_get_max_threads() / 2;
+	printf("max threads: %d\n", m_threads);
 
 	// iterate through time steps
 	for (int time = 1; time <= timeSteps; time++)
