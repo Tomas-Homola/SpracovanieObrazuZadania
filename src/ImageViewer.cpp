@@ -362,6 +362,23 @@ void ImageViewer::on_actionMCF_triggered()
 	vW->update();
 }
 
+void ImageViewer::on_actionDistance_function_triggered()
+{
+	printf("signed distance function\n");
+
+	if (vW->isEmpty()) {
+		return;
+	}
+
+	IPmodul ip;
+
+	double* data = ip.signedDistanceFunction(vW->getData(), vW->getBytesPerLine(), vW->getImgWidth(), vW->getImgHeight());
+
+	std::string fileName = "../temp/distFuncTest_edges";
+	
+	IPmodul::exportSgnFunction(fileName, vW->getImgWidth(), vW->getImgHeight(), data);
+}
+
 void ImageViewer::on_checkBox_UseGMCF_clicked(bool isChecked)
 {
 	if (!isChecked)

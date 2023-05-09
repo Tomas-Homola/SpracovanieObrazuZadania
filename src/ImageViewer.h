@@ -46,6 +46,8 @@ private slots:
 
 	void on_actionMCF_triggered();
 
+	void on_actionDistance_function_triggered();
+
 	void on_checkBox_UseGMCF_clicked(bool isChecked);
 
 	void on_pushButton_mirrorTest_clicked();

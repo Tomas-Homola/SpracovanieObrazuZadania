@@ -624,6 +624,58 @@ void IPmodul::BiCGStab_compute_t_As(int imgWidth, int imgHeight, int padding, do
 	}
 }
 
+double IPmodul::M(double* d, int i, int j, int p, int q)
+{
+	int ij = i * m_imgWidth + j;
+	int ijpq = (i + p) * m_imgWidth + (j + q);
+
+	double temp = std::min(d[ijpq] - d[ij], 0.0);
+
+	temp = temp * temp;
+	
+	return temp;
+}
+
+void IPmodul::SignDistFun_setData(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, int* Fn, int* inOutPixels, int* toUpdate)
+{
+	int i = 0, j = 0;
+	int ij = 0, IJ = 0;
+	uchar ucharValue = 0;
+
+	for (int I = 1; I < m_imgHeight - 1; I++)
+	{	
+		j = 0;
+		for (int J = 1; J < m_imgWidth - 1; J++)
+		{
+			ij = i * bytesPerLine + j;
+			IJ = I * m_imgWidth + J;
+
+			ucharValue = imgData[ij];
+
+			if (ucharValue == 0) // ak je 0 -> tak je hranica
+			{
+				Fn[IJ] = 1;
+				*toUpdate += 1;
+			}
+			
+			if (ucharValue == 100) // vnutro obrazka
+			{
+				Fn[IJ] = 0;
+				inOutPixels[IJ] = 1;
+			}
+
+			if (ucharValue == 255) // vonkajsok obrazka
+			{
+				Fn[IJ] = 0;
+				inOutPixels[IJ] = 2;
+			}
+
+			j++;
+		}
+		i++;
+	}
+}
+
 IPmodul::IPmodul()
 {
 
@@ -1990,6 +2042,99 @@ uchar* IPmodul::filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int by
 	return resultData;
 }
 
+double* IPmodul::signedDistanceFunction(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight)
+{
+	int padding = 1;
+	m_imgWidth = imgWidth + 2 * padding;
+	m_imgHeight = imgHeight + 2 * padding;
+
+	int size = m_imgWidth * m_imgHeight;
+
+	double* d_prev = new double[size] {};
+	double* d_new  = new double[size] {};
+	double* d_temp = nullptr;
+	double* d_out = nullptr;
+	int* Fn = new int[size] {};
+	int* inOutPixels = new int[size] {};
+
+	int toUpdate = 0;
+
+	SignDistFun_setData(imgData, bytesPerLine, imgWidth, imgHeight, Fn, inOutPixels, &toUpdate);
+
+	printf("toUpdate pixels: %d\n", toUpdate);
+
+	double max1 = 0.0, max2 = 0.0;
+	double temp = 0.0;
+
+	int iter = 0;
+	const int ITER_MAX = 1000;
+	int IJ = 0;
+	double tauD = 0.4;
+
+	do
+	{
+		iter++;
+
+		for (int I = padding; I < m_imgHeight - padding; I++)
+		{
+			for (int J = padding; J < m_imgWidth - padding; J++)
+			{
+				IJ = I * m_imgWidth + J;
+
+				if (Fn[IJ])
+					continue;
+
+				max1 = std::max(M(d_prev, I, J, -1, 0), M(d_prev, I, J, 1, 0));
+				max2 = std::max(M(d_prev, I, J, 0, -1), M(d_prev, I, J, 0, 1));
+				
+				temp = sqrt(max1 + max2);
+				
+				d_new[IJ] = d_prev[IJ] + tauD - tauD * temp;
+
+				if (d_new[IJ] - d_prev[IJ] < EPSILON)
+				{
+					Fn[IJ] = 1;
+					toUpdate--;
+				}
+			}
+		}
+
+		updateEdges(padding, d_new);
+
+		d_temp = d_prev;
+		d_prev = d_new; // d_prev sa nastavi na aktualne nove riesenie
+		d_new = d_temp; // stare d_prev sa bude prepisovat novymi hodnotami
+
+		d_out = d_prev;
+
+		if (toUpdate == 0)
+		{
+			printf("dist fun stop: iter = %d\n", iter);
+			break;
+		}
+
+	} while (iter <= ITER_MAX);
+
+	printf("dist fun computation done, iter: %d\n", iter);
+
+	// nastavenie hodnot vnutri na zaporne
+	for (int I = padding; I < m_imgHeight - padding; I++)
+	{
+		for (int J = padding; J < m_imgWidth - padding; J++)
+		{
+			IJ = I * m_imgWidth + J;
+
+			if (inOutPixels[IJ] == 1)
+			{
+				d_out[IJ] *= -1;
+			}
+		}
+	}
+
+
+	return d_out;
+}
+
 bool IPmodul::exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, double* imgData, bool scaleData)
 {
 	printf("Exporting image to pgm...");
@@ -2107,5 +2252,36 @@ bool IPmodul::ExportToPPM(std::string fileName, int width, int height, int maxVa
 	}
 	fclose(fp);
 
+	return true;
+}
+
+bool IPmodul::exportSgnFunction(std::string fileName, int width, int height, double* data)
+{
+	printf("Exporting signed distance function... ");
+	FILE* fp = nullptr;
+	fp = fopen((fileName + ".csv").c_str(), "w+");
+	if (fp == nullptr)
+		return false;
+
+	int padding = 1;
+	int widthNew = width + 2 * padding;
+	int heightNew = height + 2 * padding;
+	int IJ = 0;
+
+	for (int I = padding; I < heightNew - padding; I++)
+	{
+		for (int J = padding; J < widthNew - padding; J++)
+		{
+			IJ = I * widthNew + J;
+
+			fprintf(fp, "%.5lf;", data[IJ]);
+		}
+
+		fprintf(fp, "\n");
+	}
+
+	fclose(fp);
+
+	printf("done\n");
 	return true;
 }

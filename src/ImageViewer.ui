@@ -643,6 +643,8 @@
     <addaction name="actionPerona_Malik_model"/>
     <addaction name="separator"/>
     <addaction name="actionMCF"/>
+    <addaction name="separator"/>
+    <addaction name="actionDistance_function"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuImage"/>
@@ -749,6 +751,11 @@
    </property>
    <property name="shortcut">
     <string>Shift+G</string>
+   </property>
+  </action>
+  <action name="actionDistance_function">
+   <property name="text">
+    <string>Distance function</string>
    </property>
   </action>
  </widget>

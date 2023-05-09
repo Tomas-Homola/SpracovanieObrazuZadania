@@ -6,6 +6,8 @@
 #include <vector>
 #include <omp.h>
 
+#define EPSILON 0.000000001
+
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
@@ -137,6 +139,14 @@ private:
 
 	// compute t = A.s in BiCGStab
 	void BiCGStab_compute_t_As(int imgWidth, int imgHeight, int padding, double* t, double* s);
+
+	//------------------Distance function---------------------
+
+	//
+	double M(double* d, int i, int j, int p, int q);
+
+	//
+	void SignDistFun_setData(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, int* Fn, int* inOutPixels, int* toUpdate);
 public:
 
 	// Print messages from filtration functions.
@@ -311,6 +321,16 @@ public:
 	uchar* filtrationSemiImplicitGMCF_BiCGStab(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight, const double sigma, const double tau, const double K, const int timeSteps);
 
 
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="imgData"></param>
+	/// <param name="bytesPerLine"></param>
+	/// <param name="imgWidth"></param>
+	/// <param name="imgHeight"></param>
+	/// <returns></returns>
+	double* signedDistanceFunction(uchar* imgData, const int bytesPerLine, const int imgWidth, const int imgHeight);
+
 
 	//################# Image Export functions #################//
 
@@ -318,4 +338,5 @@ public:
 	static bool exportToPGM(std::string fileName, uint imgWidth, uint imgHeight, int maxValue, uchar* imgData);
 	static bool ExportToPPM(std::string fileName, int width, int height, int maxValue, float* r, float* g, float* b);
 
+	static bool exportSgnFunction(std::string fileName, int width, int height, double* data);
 };
